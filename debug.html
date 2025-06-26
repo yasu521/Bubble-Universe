@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug - Bubble Universe</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+        canvas {
+            display: block;
+        }
+        #debug-info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 100;
+            background: rgba(0,0,0,0.8);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div id="debug-info">
+        <div>Status: <span id="status">Initializing...</span></div>
+        <div>WebGL: <span id="webgl-status">Checking...</span></div>
+        <div>Spheres: <span id="sphere-count">0</span></div>
+        <div>Errors: <span id="error-count">0</span></div>
+    </div>
+    
+    <canvas id="canvas"></canvas>
+
+    <script type="module">
+        import * as THREE from 'https://unpkg.com/three@0.158.0/build/three.module.js';
+
+        class DebugBubbleUniverse {
+            constructor() {
+                this.canvas = document.getElementById('canvas');
+                this.scene = null;
+                this.camera = null;
+                this.renderer = null;
+                this.spheres = [];
+                this.errorCount = 0;
+                
+                this.updateStatus('Starting initialization...');
+                this.init();
+            }
+            
+            updateStatus(message) {
+                console.log('Debug:', message);
+                const statusEl = document.getElementById('status');
+                if (statusEl) statusEl.textContent = message;
+            }
+            
+            updateError(error) {
+                this.errorCount++;
+                console.error('Error:', error);
+                const errorEl = document.getElementById('error-count');
+                if (errorEl) errorEl.textContent = this.errorCount;
+            }
+            
+            checkWebGL() {
+                try {
+                    const canvas = document.createElement('canvas');
+                    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                    const webglEl = document.getElementById('webgl-status');
+                    
+                    if (gl) {
+                        webglEl.textContent = 'Supported';
+                        webglEl.style.color = 'green';
+                        return true;
+                    } else {
+                        webglEl.textContent = 'Not Supported';
+                        webglEl.style.color = 'red';
+                        return false;
+                    }
+                } catch (e) {
+                    const webglEl = document.getElementById('webgl-status');
+                    webglEl.textContent = 'Error: ' + e.message;
+                    webglEl.style.color = 'red';
+                    return false;
+                }
+            }
+            
+            init() {
+                try {
+                    this.updateStatus('Checking WebGL support...');
+                    if (!this.checkWebGL()) {
+                        this.updateError('WebGL not supported');
+                        return;
+                    }
+                    
+                    this.updateStatus('Creating scene...');
+                    this.setupScene();
+                    
+                    this.updateStatus('Creating camera...');
+                    this.setupCamera();
+                    
+                    this.updateStatus('Creating renderer...');
+                    this.setupRenderer();
+                    
+                    this.updateStatus('Adding lighting...');
+                    this.setupLighting();
+                    
+                    this.updateStatus('Creating spheres...');
+                    this.createSpheres();
+                    
+                    this.updateStatus('Setting up events...');
+                    this.setupEvents();
+                    
+                    this.updateStatus('Starting animation...');
+                    this.animate();
+                    
+                    this.updateStatus('Running successfully!');
+                    
+                } catch (error) {
+                    this.updateError(error);
+                    this.updateStatus('Failed to initialize: ' + error.message);
+                }
+            }
+            
+            setupScene() {
+                this.scene = new THREE.Scene();
+                this.scene.background = new THREE.Color(0x001122);
+            }
+            
+            setupCamera() {
+                this.camera = new THREE.PerspectiveCamera(
+                    75, 
+                    window.innerWidth / window.innerHeight, 
+                    0.1, 
+                    1000
+                );
+                this.camera.position.z = 50;
+            }
+            
+            setupRenderer() {
+                this.renderer = new THREE.WebGLRenderer({ 
+                    canvas: this.canvas, 
+                    antialias: true 
+                });
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            }
+            
+            setupLighting() {
+                // Ambient light
+                const ambientLight = new THREE.AmbientLight(0x404040, 0.4);
+                this.scene.add(ambientLight);
+                
+                // Directional light
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+                directionalLight.position.set(10, 10, 5);
+                this.scene.add(directionalLight);
+            }
+            
+            createSpheres() {
+                const geometry = new THREE.SphereGeometry(1, 16, 16);
+                
+                // Create 10 simple spheres first
+                for (let i = 0; i < 10; i++) {
+                    const material = new THREE.MeshPhongMaterial({
+                        color: new THREE.Color().setHSL(i / 10, 0.8, 0.6),
+                        transparent: true,
+                        opacity: 0.8
+                    });
+                    
+                    const sphere = new THREE.Mesh(geometry, material);
+                    
+                    // Random position
+                    sphere.position.x = (Math.random() - 0.5) * 40;
+                    sphere.position.y = (Math.random() - 0.5) * 40;
+                    sphere.position.z = (Math.random() - 0.5) * 40;
+                    
+                    // Random scale
+                    const scale = 0.5 + Math.random() * 1.5;
+                    sphere.scale.setScalar(scale);
+                    
+                    this.scene.add(sphere);
+                    this.spheres.push({
+                        mesh: sphere,
+                        velocity: new THREE.Vector3(
+                            (Math.random() - 0.5) * 0.02,
+                            (Math.random() - 0.5) * 0.02,
+                            (Math.random() - 0.5) * 0.02
+                        )
+                    });
+                }
+                
+                const sphereCountEl = document.getElementById('sphere-count');
+                if (sphereCountEl) sphereCountEl.textContent = this.spheres.length;
+            }
+            
+            setupEvents() {
+                window.addEventListener('resize', () => {
+                    this.camera.aspect = window.innerWidth / window.innerHeight;
+                    this.camera.updateProjectionMatrix();
+                    this.renderer.setSize(window.innerWidth, window.innerHeight);
+                });
+            }
+            
+            animate() {
+                requestAnimationFrame(() => this.animate());
+                
+                try {
+                    // Animate spheres
+                    this.spheres.forEach(sphereData => {
+                        sphereData.mesh.position.add(sphereData.velocity);
+                        sphereData.mesh.rotation.x += 0.01;
+                        sphereData.mesh.rotation.y += 0.01;
+                        
+                        // Boundary check
+                        if (Math.abs(sphereData.mesh.position.x) > 20) {
+                            sphereData.velocity.x *= -1;
+                        }
+                        if (Math.abs(sphereData.mesh.position.y) > 20) {
+                            sphereData.velocity.y *= -1;
+                        }
+                        if (Math.abs(sphereData.mesh.position.z) > 20) {
+                            sphereData.velocity.z *= -1;
+                        }
+                    });
+                    
+                    // Rotate camera
+                    const time = Date.now() * 0.0005;
+                    this.camera.position.x = Math.cos(time) * 30;
+                    this.camera.position.z = Math.sin(time) * 30;
+                    this.camera.lookAt(this.scene.position);
+                    
+                    this.renderer.render(this.scene, this.camera);
+                    
+                } catch (error) {
+                    this.updateError(error);
+                }
+            }
+        }
+
+        // Initialize when page loads
+        window.addEventListener('DOMContentLoaded', () => {
+            new DebugBubbleUniverse();
+        });
+    </script>
+</body>
+</html>
