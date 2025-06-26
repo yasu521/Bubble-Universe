@@ -11,13 +11,22 @@ class EnhancedBubbleUniverse {
         this.mouse = new THREE.Vector2();
         this.hoveredSphere = null;
         
-        // Sphere system - Optimized for WebGL limits
+        // Sphere system - Enhanced with texture support
         this.sphereCount = 50;
-        this.instancedMesh = null;
+        this.sphereMeshes = []; // Changed from instancedMesh to individual meshes
         this.sphereLights = [];
         this.sphereData = [];
+        this.sphereMaterials = []; // Individual materials for each sphere
         this.glowingCores = []; // Internal glowing objects
         this.maxLights = 20; // Limit point lights to avoid shader errors
+        
+        // Texture system
+        this.textureLoader = new THREE.TextureLoader();
+        this.sphereTexture = null;
+        
+        // Distance culling system
+        this.maxVisibleDistance = 200;
+        this.cullDistance = 150;
         
         // Ripple system
         this.ripples = [];
@@ -29,9 +38,9 @@ class EnhancedBubbleUniverse {
         this.lastTime = 0;
         this.frameCount = 0;
         
-        // Spatial configuration
+        // Spatial configuration - Shortened for better visibility
         this.baseRadius = 60;
-        this.tunnelLength = 400;
+        this.tunnelLength = 100; // Reduced from 400 to 100
         this.maxRadiusMultiplier = 1.2;
         
         // Fog settings
@@ -62,6 +71,9 @@ class EnhancedBubbleUniverse {
             
             console.log('Setting up camera...');
             this.setupCamera();
+            
+            console.log('Loading textures...');
+            await this.loadTextures();
             
             console.log('Setting up lighting and fog...');
             this.setupLighting();
@@ -137,6 +149,22 @@ class EnhancedBubbleUniverse {
     
     setupFog() {
         this.scene.fog = new THREE.FogExp2(0x000011, this.fogDensity);
+    }
+    
+    async loadTextures() {
+        try {
+            this.sphereTexture = await this.textureLoader.loadAsync('texture/1.png');
+            this.sphereTexture.wrapS = THREE.RepeatWrapping;
+            this.sphereTexture.wrapT = THREE.RepeatWrapping;
+            this.sphereTexture.generateMipmaps = true;
+            this.sphereTexture.minFilter = THREE.LinearMipmapLinearFilter;
+            this.sphereTexture.magFilter = THREE.LinearFilter;
+            this.sphereTexture.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
+            console.log('Texture loaded successfully');
+        } catch (error) {
+            console.warn('Failed to load texture:', error);
+            this.sphereTexture = null;
+        }
     }
     
     createMirrors() {
@@ -243,73 +271,77 @@ class EnhancedBubbleUniverse {
     }
     
     createSpheres() {
-        // Create sphere geometry with higher detail
-        const geometry = new THREE.SphereGeometry(1, 32, 32);
+        // Create larger sphere geometry with higher detail
+        const geometry = new THREE.SphereGeometry(1.5, 32, 32); // Increased from 1 to 1.5
         
-        // Enhanced glass material
-        const material = new THREE.MeshPhysicalMaterial({
-            transmission: 0.95,
-            opacity: 0.2,
-            transparent: true,
-            thickness: 0.8,
-            ior: 1.45,
-            clearcoat: 1.0,
-            clearcoatRoughness: 0.02,
-            envMapIntensity: 1.5,
-            side: THREE.DoubleSide,
-            roughness: 0.05,
-            metalness: 0.1
-        });
+        // Create glowing core geometry
+        const coreGeometry = new THREE.SphereGeometry(0.5, 16, 16);
         
-        // Create instanced mesh
-        this.instancedMesh = new THREE.InstancedMesh(geometry, material, this.sphereCount);
-        this.instancedMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-        this.instancedMesh.castShadow = true;
-        this.instancedMesh.receiveShadow = true;
-        this.scene.add(this.instancedMesh);
-        
-        // Create glowing cores geometry
-        const coreGeometry = new THREE.SphereGeometry(0.3, 16, 16);
-        const coreMaterial = new THREE.MeshBasicMaterial({
-            transparent: true,
-            opacity: 0.8
-        });
-        
-        this.glowingCores = new THREE.InstancedMesh(coreGeometry, coreMaterial, this.sphereCount);
-        this.glowingCores.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-        this.scene.add(this.glowingCores);
-        
-        // Initialize sphere data and lights
-        const matrix = new THREE.Matrix4();
-        const coreMatrix = new THREE.Matrix4();
-        const color = new THREE.Color();
-        
+        // Create individual spheres with texture support
         for (let i = 0; i < this.sphereCount; i++) {
             const position = this.generateSpherePosition(i);
             
-            // Random scale with size variation
-            const scale = 0.8 + Math.random() * 2.5;
+            // Much larger scale range: 2.5 to 5.0 (previously 0.8 to 3.3)
+            const scale = 2.5 + Math.random() * 2.5;
             
-            // Set sphere matrix
-            matrix.makeScale(scale, scale, scale);
-            matrix.setPosition(position.x, position.y, position.z);
-            this.instancedMesh.setMatrixAt(i, matrix);
-            
-            // Set core matrix (smaller than sphere)
-            const coreScale = scale * 0.4;
-            coreMatrix.makeScale(coreScale, coreScale, coreScale);
-            coreMatrix.setPosition(position.x, position.y, position.z);
-            this.glowingCores.setMatrixAt(i, coreMatrix);
-            
-            // Random color
+            // Random color for this sphere
             const colorHex = this.colors[Math.floor(Math.random() * this.colors.length)];
-            color.setHex(colorHex);
-            this.instancedMesh.setColorAt(i, color);
-            this.glowingCores.setColorAt(i, color);
+            const color = new THREE.Color(colorHex);
+            
+            // Create enhanced material with texture support
+            const material = new THREE.MeshPhysicalMaterial({
+                // Base physical properties
+                transmission: 0.7,        // Reduced for better texture visibility
+                opacity: 0.6,            // Increased for better color blending
+                transparent: true,
+                thickness: 0.8,
+                ior: 1.45,
+                clearcoat: 1.0,
+                clearcoatRoughness: 0.02,
+                envMapIntensity: 1.5,
+                side: THREE.DoubleSide,
+                roughness: 0.05,
+                metalness: 0.1,
+                
+                // Color and texture
+                color: color,
+                emissive: color.clone().multiplyScalar(0.2), // Subtle glow
+                emissiveIntensity: 0.3,
+                
+                // Texture mapping (if available)
+                map: this.sphereTexture,
+                alphaMap: this.sphereTexture,
+                
+                // Blending
+                blending: THREE.NormalBlending
+            });
+            
+            // Create sphere mesh
+            const sphereMesh = new THREE.Mesh(geometry, material);
+            sphereMesh.position.set(position.x, position.y, position.z);
+            sphereMesh.scale.setScalar(scale);
+            sphereMesh.castShadow = true;
+            sphereMesh.receiveShadow = true;
+            this.scene.add(sphereMesh);
+            this.sphereMeshes.push(sphereMesh);
+            this.sphereMaterials.push(material);
+            
+            // Create glowing core
+            const coreMaterial = new THREE.MeshBasicMaterial({
+                color: color,
+                transparent: true,
+                opacity: 0.8
+            });
+            
+            const coreMesh = new THREE.Mesh(coreGeometry, coreMaterial);
+            coreMesh.position.set(position.x, position.y, position.z);
+            coreMesh.scale.setScalar(scale * 0.4);
+            this.scene.add(coreMesh);
+            this.glowingCores.push(coreMesh);
             
             // Create point light only for selected spheres to avoid WebGL limits
             if (i < this.maxLights) {
-                const light = new THREE.PointLight(colorHex, 2.0, 25);
+                const light = new THREE.PointLight(colorHex, 2.0, 30); // Increased range
                 light.position.set(position.x, position.y, position.z);
                 this.scene.add(light);
                 this.sphereLights.push(light);
@@ -335,18 +367,15 @@ class EnhancedBubbleUniverse {
                 isHovered: false,
                 targetScale: scale,
                 targetIntensity: 0.8 + Math.random() * 1.2,
-                interactionRadius: 80 + Math.random() * 40
+                interactionRadius: 100 + Math.random() * 50, // Increased interaction radius
+                isVisible: true,
+                mesh: sphereMesh,
+                coreMesh: coreMesh,
+                material: material
             });
         }
         
-        this.instancedMesh.instanceMatrix.needsUpdate = true;
-        this.glowingCores.instanceMatrix.needsUpdate = true;
-        if (this.instancedMesh.instanceColor) {
-            this.instancedMesh.instanceColor.needsUpdate = true;
-        }
-        if (this.glowingCores.instanceColor) {
-            this.glowingCores.instanceColor.needsUpdate = true;
-        }
+        console.log(`Created ${this.sphereCount} enhanced spheres with textures`);
         
         // Update sphere count display
         const sphereCountElement = document.getElementById('sphere-count');
@@ -515,17 +544,23 @@ class EnhancedBubbleUniverse {
             
             // Change color
             const newColor = this.colors[Math.floor(Math.random() * this.colors.length)];
+            const color = new THREE.Color(newColor);
+            
+            // Update sphere material color
+            sphereData.material.color = color;
+            sphereData.material.emissive = color.clone().multiplyScalar(0.2);
+            
+            // Update core color
+            sphereData.coreMesh.material.color = color;
+            
+            // Update light color
             const light = this.sphereLights[this.hoveredSphere];
             if (light) {
                 light.color.setHex(newColor);
             }
             
-            const color = new THREE.Color();
-            color.setHex(newColor);
-            this.instancedMesh.setColorAt(this.hoveredSphere, color);
-            this.glowingCores.setColorAt(this.hoveredSphere, color);
-            this.instancedMesh.instanceColor.needsUpdate = true;
-            this.glowingCores.instanceColor.needsUpdate = true;
+            // Store new color
+            sphereData.originalColor = newColor;
             
             // Reset after animation
             setTimeout(() => {
@@ -586,24 +621,63 @@ class EnhancedBubbleUniverse {
             this.hoveredSphere = null;
         }
         
-        // Check intersection with instanced mesh
-        const intersects = this.raycaster.intersectObject(this.instancedMesh);
+        // Check intersection with individual sphere meshes
+        const intersects = this.raycaster.intersectObjects(this.sphereMeshes);
         
         if (intersects.length > 0) {
-            const instanceId = intersects[0].instanceId;
-            if (instanceId !== undefined) {
-                this.hoveredSphere = instanceId;
-                this.sphereData[instanceId].isHovered = true;
+            // Find which sphere was hit
+            const hitMesh = intersects[0].object;
+            const sphereIndex = this.sphereMeshes.indexOf(hitMesh);
+            
+            if (sphereIndex !== -1) {
+                this.hoveredSphere = sphereIndex;
+                this.sphereData[sphereIndex].isHovered = true;
             }
         }
     }
     
     updateSpheres() {
-        const matrix = new THREE.Matrix4();
-        const coreMatrix = new THREE.Matrix4();
-        
         for (let i = 0; i < this.sphereCount; i++) {
             const sphereData = this.sphereData[i];
+            
+            // Distance culling - check if sphere is too far from camera
+            const distanceToCamera = this.camera.position.distanceTo(sphereData.position);
+            
+            if (distanceToCamera > this.maxVisibleDistance) {
+                // Hide sphere if too far
+                if (sphereData.isVisible) {
+                    sphereData.mesh.visible = false;
+                    sphereData.coreMesh.visible = false;
+                    sphereData.isVisible = false;
+                    
+                    // Turn off light
+                    const light = this.sphereLights[i];
+                    if (light) {
+                        light.intensity = 0;
+                    }
+                }
+                continue; // Skip update for invisible spheres
+            } else if (distanceToCamera > this.cullDistance) {
+                // Reduce quality for distant spheres
+                if (sphereData.isVisible) {
+                    sphereData.mesh.visible = true;
+                    sphereData.coreMesh.visible = false; // Hide core for distant spheres
+                    sphereData.isVisible = true;
+                    
+                    // Reduce light intensity
+                    const light = this.sphereLights[i];
+                    if (light) {
+                        light.intensity = sphereData.lightIntensity * 0.3;
+                    }
+                }
+            } else {
+                // Full quality for near spheres
+                if (!sphereData.isVisible || !sphereData.coreMesh.visible) {
+                    sphereData.mesh.visible = true;
+                    sphereData.coreMesh.visible = true;
+                    sphereData.isVisible = true;
+                }
+            }
             
             // Update position with enhanced movement
             sphereData.position.add(sphereData.velocity);
@@ -637,30 +711,25 @@ class EnhancedBubbleUniverse {
                 sphereData.targetIntensity = sphereData.originalIntensity * 2;
             }
             
-            // Update matrices
-            matrix.makeScale(currentScale, currentScale, currentScale);
-            matrix.setPosition(sphereData.position.x, sphereData.position.y, sphereData.position.z);
-            this.instancedMesh.setMatrixAt(i, matrix);
+            // Update mesh positions and scales
+            sphereData.mesh.position.copy(sphereData.position);
+            sphereData.mesh.scale.setScalar(currentScale);
             
-            // Update core matrix
-            const coreScale = currentScale * 0.4;
-            coreMatrix.makeScale(coreScale, coreScale, coreScale);
-            coreMatrix.setPosition(sphereData.position.x, sphereData.position.y, sphereData.position.z);
-            this.glowingCores.setMatrixAt(i, coreMatrix);
+            sphereData.coreMesh.position.copy(sphereData.position);
+            sphereData.coreMesh.scale.setScalar(currentScale * 0.4);
             
-            // Update light (only if it exists)
+            // Update light (only if it exists and sphere is visible)
             const light = this.sphereLights[i];
-            if (light) {
+            if (light && sphereData.isVisible) {
                 light.position.copy(sphereData.position);
-                light.intensity = sphereData.lightIntensity * pulse;
+                if (distanceToCamera <= this.cullDistance) {
+                    light.intensity = sphereData.lightIntensity * pulse;
+                }
             }
             
             // Velocity damping
             sphereData.velocity.multiplyScalar(0.995);
         }
-        
-        this.instancedMesh.instanceMatrix.needsUpdate = true;
-        this.glowingCores.instanceMatrix.needsUpdate = true;
     }
     
     updateRipples() {
@@ -711,12 +780,8 @@ class EnhancedBubbleUniverse {
         this.updateSpheres();
         this.updateRipples();
         
-        // Enhanced camera movement
-        const cameraRadius = 8;
-        this.camera.position.x = Math.sin(this.time * 0.08) * cameraRadius;
-        this.camera.position.y = Math.cos(this.time * 0.12) * cameraRadius * 0.5;
-        this.camera.position.z = 150 + Math.sin(this.time * 0.05) * 20;
-        this.camera.lookAt(0, 0, 0);
+        // Camera is now fixed - no movement
+        // this.camera.position remains at (0, 0, 150)
         
         // Render with post-processing or basic renderer
         if (this.composer) {
