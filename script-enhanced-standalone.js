@@ -12,7 +12,7 @@ class EnhancedBubbleUniverse {
         this.hoveredSphere = null;
         
         // Sphere system - Optimized for WebGL limits
-        this.sphereCount = 150;
+        this.sphereCount = 50;
         this.instancedMesh = null;
         this.sphereLights = [];
         this.sphereData = [];
@@ -46,9 +46,6 @@ class EnhancedBubbleUniverse {
             0xc44569, 0xf8b500, 0x786fa6, 0xf19066, 0x778beb,
             0xe77f67, 0xcf6679, 0x4b7bec, 0xa55eea, 0x26de81,
             0xfc5c65, 0xfed330, 0x45aaf2, 0xfd79a8, 0xfdcb6e,
-            0x6c5ce7, 0x74b9ff, 0x00b894, 0xe17055, 0x81ecec,
-            0xfab1a0, 0xff7675, 0x00cec9, 0x55a3ff, 0xdda0dd,
-            0x98fb98, 0xf0e68c, 0xdda0dd, 0x87ceeb, 0xffa07a
         ];
         
         // Mirrors
