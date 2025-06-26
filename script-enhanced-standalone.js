@@ -2,8 +2,8 @@ class EnhancedBubbleUniverse {
     constructor() {
         this.canvas = document.getElementById('canvas');
         this.scene = new THREE.Scene();
-        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
-        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, alpha: true });
+        this.camera = new THREE.PerspectiveCamera(100, window.innerWidth / window.innerHeight, 0.1, 2000); // FOV 100 degrees
+        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: false, alpha: true }); // Disabled antialias for performance
         this.composer = null;
         
         // Raycaster for interaction
@@ -11,50 +11,76 @@ class EnhancedBubbleUniverse {
         this.mouse = new THREE.Vector2();
         this.hoveredSphere = null;
         
-        // Sphere system - Enhanced with texture support
-        this.sphereCount = 50;
-        this.sphereMeshes = []; // Changed from instancedMesh to individual meshes
+        // Hybrid sphere system - Near spheres (individual) + Far spheres (instanced)
+        this.sphereCount = 10; // Reduced from 50 for performance
+        this.nearSpheres = []; // Individual meshes for near spheres
+        this.farInstancedMesh = null; // InstancedMesh for far spheres
+        this.sphereMeshes = []; // All sphere meshes for raycasting
         this.sphereLights = [];
         this.sphereData = [];
-        this.sphereMaterials = []; // Individual materials for each sphere
+        this.sphereMaterials = []; // Individual materials for near spheres
         this.glowingCores = []; // Internal glowing objects
-        this.maxLights = 20; // Limit point lights to avoid shader errors
+        this.maxLights = 15; // Reduced from 20
+        
+        // LOD system
+        this.nearDistance = 80;
+        this.farDistance = 120;
+        this.cullDistance = 180;
+        this.maxVisibleDistance = 250; // Maximum distance before hiding spheres
         
         // Texture system
         this.textureLoader = new THREE.TextureLoader();
         this.sphereTexture = null;
         
-        // Distance culling system
-        this.maxVisibleDistance = 200;
-        this.cullDistance = 150;
-        
-        // Ripple system
+        // Ripple system with pooling
         this.ripples = [];
         this.rippleMeshes = [];
+        this.ripplePool = [];
+        this.maxRipples = 10;
         
-        // Animation
+        // Animation and performance
         this.time = 0;
         this.fps = 0;
         this.lastTime = 0;
         this.frameCount = 0;
+        this.deltaTime = 0;
         
-        // Spatial configuration - Shortened for better visibility
-        this.baseRadius = 60;
-        this.tunnelLength = 100; // Reduced from 400 to 100
+        // Update frequency optimization
+        this.updateIntervals = {
+            physics: 1,        // Every frame
+            distance: 5,       // Every 5 frames
+            mouse: 2,          // Every 2 frames
+            lighting: 3,       // Every 3 frames
+            frustum: 10,       // Every 10 frames
+            lod: 15           // Every 15 frames
+        };
+        
+        // Spatial configuration - Updated: Z: -50 to +100, baseRadius: 200 (expanded X-axis)
+        this.baseRadius = 200; // Expanded from 100 to 200 for wider X-axis range
+        this.tunnelLength = 150; // -50 to +100 = 150 range
+        this.zOffset = -50; // Start from Z = -50
         this.maxRadiusMultiplier = 1.2;
         
-        // Fog settings
-        this.fogDensity = 0.0007;
+        // Frustum culling
+        this.frustum = new THREE.Frustum();
+        this.cameraMatrix = new THREE.Matrix4();
         
-        // Colors for lights - Extended palette
+        // WebWorker for physics (will be initialized if supported)
+        this.physicsWorker = null;
+        this.useWebWorker = false;
+        
+        // Fog settings - Reduced for brighter environment
+        this.fogDensity = 0.0003; // Reduced from 0.0007
+        
+        // Colors for lights - White base + bright colorful palette (no dark colors)
         this.colors = [
-            0xff6b6b, 0x4ecdc4, 0x45b7d1, 0x96ceb4, 0xfeca57,
-            0xff9ff3, 0x54a0ff, 0x5f27cd, 0x00d2d3, 0xff9f43,
-            0x10ac84, 0xee5a24, 0x0abde3, 0x006ba6, 0xf368e0,
-            0x3742fa, 0x2f3542, 0xff3838, 0xff9500, 0xffdd59,
-            0xc44569, 0xf8b500, 0x786fa6, 0xf19066, 0x778beb,
-            0xe77f67, 0xcf6679, 0x4b7bec, 0xa55eea, 0x26de81,
-            0xfc5c65, 0xfed330, 0x45aaf2, 0xfd79a8, 0xfdcb6e,
+            0xffffff, 0xffb3ba, 0xffdfba, 0xffffba, 0xbaffc9,
+            0xbae1ff, 0xc9baff, 0xffbaff, 0xffc0cb, 0x87ceeb,
+            0x98fb98, 0xffd700, 0xff69b4, 0x00bfff, 0x7fffd4,
+            0xffa500, 0xff1493, 0x00ff7f, 0x1e90ff, 0xffd1dc,
+            0xb0e0e6, 0xf0e68c, 0xdda0dd, 0x90ee90, 0xffb6c1,
+            0x87cefa, 0xf5deb3, 0xffc0cb, 0xafeeee, 0xffe4e1,
+            0xf0fff0, 0xfff8dc, 0xe6e6fa, 0xffefd5, 0xf5f5dc,
         ];
         
         // Mirrors
@@ -118,21 +144,21 @@ class EnhancedBubbleUniverse {
     }
     
     setupCamera() {
-        this.camera.position.set(0, 0, 150);
+        this.camera.position.set(0, 0, 160); // Moved +10 in Z direction
         this.camera.lookAt(0, 0, 0);
     }
     
     setupLighting() {
-        // Ambient light
-        const ambientLight = new THREE.AmbientLight(0x404040, 0.3);
+        // Enhanced ambient light for brighter environment
+        const ambientLight = new THREE.AmbientLight(0x404040, 0.8); // Increased from 0.3 to 0.8
         this.scene.add(ambientLight);
         
-        // Main directional light
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6);
+        // Main directional light - enhanced
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2); // Increased from 0.6 to 1.2
         directionalLight.position.set(100, 100, 100);
         directionalLight.castShadow = true;
-        directionalLight.shadow.mapSize.width = 2048;
-        directionalLight.shadow.mapSize.height = 2048;
+        directionalLight.shadow.mapSize.width = 1024; // Reduced from 2048 for performance
+        directionalLight.shadow.mapSize.height = 1024;
         directionalLight.shadow.camera.near = 0.1;
         directionalLight.shadow.camera.far = 500;
         directionalLight.shadow.camera.left = -200;
@@ -141,29 +167,56 @@ class EnhancedBubbleUniverse {
         directionalLight.shadow.camera.bottom = -200;
         this.scene.add(directionalLight);
         
-        // Additional rim lighting
-        const rimLight = new THREE.DirectionalLight(0x4ecdc4, 0.3);
-        rimLight.position.set(-50, -50, -50);
-        this.scene.add(rimLight);
+        // Hemisphere light for natural lighting
+        const hemisphereLight = new THREE.HemisphereLight(0x87ceeb, 0x000000, 0.6);
+        this.scene.add(hemisphereLight);
+        
+        // Multiple fill lights for enhanced brightness
+        const fillLights = [
+            { pos: [-100, 50, 50], color: 0x4ecdc4, intensity: 0.4 },
+            { pos: [100, -50, 50], color: 0xff6b6b, intensity: 0.4 },
+            { pos: [0, 100, -50], color: 0xfeca57, intensity: 0.3 }
+        ];
+        
+        fillLights.forEach(light => {
+            const dirLight = new THREE.DirectionalLight(light.color, light.intensity);
+            dirLight.position.set(...light.pos);
+            this.scene.add(dirLight);
+        });
+        
+        console.log('Enhanced lighting setup complete - brighter environment');
     }
     
     setupFog() {
-        this.scene.fog = new THREE.FogExp2(0x000011, this.fogDensity);
+        // Fog removed as requested
+        // this.scene.fog = new THREE.FogExp2(0x000011, this.fogDensity);
     }
     
     async loadTextures() {
         try {
-            this.sphereTexture = await this.textureLoader.loadAsync('texture/1.png');
-            this.sphereTexture.wrapS = THREE.RepeatWrapping;
-            this.sphereTexture.wrapT = THREE.RepeatWrapping;
-            this.sphereTexture.generateMipmaps = true;
-            this.sphereTexture.minFilter = THREE.LinearMipmapLinearFilter;
-            this.sphereTexture.magFilter = THREE.LinearFilter;
-            this.sphereTexture.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
-            console.log('Texture loaded successfully');
+            // Load multiple textures
+            this.sphereTextures = [];
+            const textureFiles = ['texture/1.png', 'texture/3.png'];
+            
+            for (const file of textureFiles) {
+                try {
+                    const texture = await this.textureLoader.loadAsync(file);
+                    texture.wrapS = THREE.RepeatWrapping;
+                    texture.wrapT = THREE.RepeatWrapping;
+                    texture.generateMipmaps = true;
+                    texture.minFilter = THREE.LinearMipmapLinearFilter;
+                    texture.magFilter = THREE.LinearFilter;
+                    texture.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
+                    this.sphereTextures.push(texture);
+                } catch (error) {
+                    console.warn(`Failed to load texture ${file}:`, error);
+                }
+            }
+            
+            console.log(`Loaded ${this.sphereTextures.length} textures successfully`);
         } catch (error) {
-            console.warn('Failed to load texture:', error);
-            this.sphereTexture = null;
+            console.warn('Failed to load textures:', error);
+            this.sphereTextures = [];
         }
     }
     
@@ -247,25 +300,38 @@ class EnhancedBubbleUniverse {
         this.scene.add(rightMirror);
         
         console.log('Fallback mirrors created');
+        
+        // Giant inner sphere removed as requested
     }
     
+    
     generateSpherePosition(index) {
-        // Z-axis (depth): tunnel direction with enhanced distribution
+        // Z-axis: -50 to +100 range (150 total length)
         const normalizedIndex = index / this.sphereCount;
-        const z = (normalizedIndex * this.tunnelLength) - (this.tunnelLength / 2);
+        const z = (normalizedIndex * this.tunnelLength) + this.zOffset; // -50 to +100
         
-        // Depth-based radius expansion (distant spheres spread more)
-        const depthRatio = Math.abs(z) / (this.tunnelLength / 2);
-        const radiusMultiplier = 1 + (depthRatio * (this.maxRadiusMultiplier - 1));
+        // Camera distance for FOV-based positioning
+        const cameraDistance = 150 - z; // Distance from camera at (0,0,150)
         
-        // Radial distribution with some randomness
-        const angle = Math.random() * Math.PI * 2;
+        // FOV-based maximum radius calculation
+        const fov = 100 * Math.PI / 180; // 100 degrees in radians
+        const maxViewRadius = Math.tan(fov / 2) * cameraDistance * 0.75; // Use 75% of view
+        
+        // Depth-based radius with FOV consideration
+        const baseRadius = Math.min(this.baseRadius, maxViewRadius * 0.6);
         const radiusRandom = Math.random() * 0.8 + 0.2; // 0.2 to 1.0
-        const radius = this.baseRadius * radiusMultiplier * radiusRandom;
+        const radius = baseRadius * radiusRandom;
+        
+        // Radial distribution
+        const angle = Math.random() * Math.PI * 2;
+        
+        // Enhanced distribution for better visibility
+        const x = Math.cos(angle) * radius;
+        const y = Math.sin(angle) * radius;
         
         return {
-            x: Math.cos(angle) * radius,
-            y: Math.sin(angle) * radius,
+            x: x,
+            y: y,
             z: z
         };
     }
@@ -281,39 +347,24 @@ class EnhancedBubbleUniverse {
         for (let i = 0; i < this.sphereCount; i++) {
             const position = this.generateSpherePosition(i);
             
-            // Much larger scale range: 2.5 to 5.0 (previously 0.8 to 3.3)
-            const scale = 2.5 + Math.random() * 2.5;
+            // Massive scale range: 8.0 to 24.0 for extremely prominent spheres (2-3x larger)
+            const scale = 8.0 + Math.random() * 16.0;
             
             // Random color for this sphere
             const colorHex = this.colors[Math.floor(Math.random() * this.colors.length)];
             const color = new THREE.Color(colorHex);
             
-            // Create enhanced material with texture support
-            const material = new THREE.MeshPhysicalMaterial({
-                // Base physical properties
-                transmission: 0.7,        // Reduced for better texture visibility
-                opacity: 0.6,            // Increased for better color blending
-                transparent: true,
-                thickness: 0.8,
-                ior: 1.45,
-                clearcoat: 1.0,
-                clearcoatRoughness: 0.02,
-                envMapIntensity: 1.5,
-                side: THREE.DoubleSide,
-                roughness: 0.05,
-                metalness: 0.1,
-                
-                // Color and texture
+            // Select random texture from available textures
+            const randomTexture = this.sphereTextures.length > 0 ? 
+                this.sphereTextures[Math.floor(Math.random() * this.sphereTextures.length)] : null;
+            
+            // Create simple material without mirror effects
+            const material = new THREE.MeshBasicMaterial({
                 color: color,
-                emissive: color.clone().multiplyScalar(0.2), // Subtle glow
-                emissiveIntensity: 0.3,
-                
-                // Texture mapping (if available)
-                map: this.sphereTexture,
-                alphaMap: this.sphereTexture,
-                
-                // Blending
-                blending: THREE.NormalBlending
+                transparent: true,
+                opacity: 0.8,
+                map: randomTexture,
+                alphaMap: randomTexture
             });
             
             // Create sphere mesh
@@ -527,46 +578,56 @@ class EnhancedBubbleUniverse {
     }
     
     onMouseClick(event) {
-        this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-        this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-        
-        // Create ripple effect
-        this.createRipple(event.clientX, event.clientY);
-        
-        this.performRaycast();
-        
-        if (this.hoveredSphere !== null) {
-            const sphereData = this.sphereData[this.hoveredSphere];
+        try {
+            this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
             
-            // Animate clicked sphere
-            sphereData.targetScale = sphereData.originalScale * 2;
-            sphereData.targetIntensity = sphereData.originalIntensity * 3;
+            // Ripple effect removed as requested
             
-            // Change color
-            const newColor = this.colors[Math.floor(Math.random() * this.colors.length)];
-            const color = new THREE.Color(newColor);
+            this.performRaycast();
             
-            // Update sphere material color
-            sphereData.material.color = color;
-            sphereData.material.emissive = color.clone().multiplyScalar(0.2);
-            
-            // Update core color
-            sphereData.coreMesh.material.color = color;
-            
-            // Update light color
-            const light = this.sphereLights[this.hoveredSphere];
-            if (light) {
-                light.color.setHex(newColor);
+            if (this.hoveredSphere !== null && this.hoveredSphere < this.sphereData.length) {
+                const sphereData = this.sphereData[this.hoveredSphere];
+                
+                if (sphereData && sphereData.material && sphereData.coreMesh) {
+                    // Animate clicked sphere
+                    sphereData.targetScale = sphereData.originalScale * 2;
+                    sphereData.targetIntensity = sphereData.originalIntensity * 3;
+                    
+                    // Change color
+                    const newColor = this.colors[Math.floor(Math.random() * this.colors.length)];
+                    const color = new THREE.Color(newColor);
+                    
+                    // Update sphere material color safely
+                    if (sphereData.material.color) {
+                        sphereData.material.color.copy(color);
+                    }
+                    
+                    // Update core color safely
+                    if (sphereData.coreMesh.material && sphereData.coreMesh.material.color) {
+                        sphereData.coreMesh.material.color.copy(color);
+                    }
+                    
+                    // Update light color safely
+                    const light = this.sphereLights[this.hoveredSphere];
+                    if (light && light.color) {
+                        light.color.setHex(newColor);
+                    }
+                    
+                    // Store new color
+                    sphereData.originalColor = newColor;
+                    
+                    // Reset after animation
+                    setTimeout(() => {
+                        if (sphereData) {
+                            sphereData.targetScale = sphereData.originalScale;
+                            sphereData.targetIntensity = sphereData.originalIntensity;
+                        }
+                    }, 1500);
+                }
             }
-            
-            // Store new color
-            sphereData.originalColor = newColor;
-            
-            // Reset after animation
-            setTimeout(() => {
-                sphereData.targetScale = sphereData.originalScale;
-                sphereData.targetIntensity = sphereData.originalIntensity;
-            }, 1500);
+        } catch (error) {
+            console.warn('Error in onMouseClick:', error);
         }
     }
     
@@ -640,59 +701,29 @@ class EnhancedBubbleUniverse {
         for (let i = 0; i < this.sphereCount; i++) {
             const sphereData = this.sphereData[i];
             
-            // Distance culling - check if sphere is too far from camera
-            const distanceToCamera = this.camera.position.distanceTo(sphereData.position);
-            
-            if (distanceToCamera > this.maxVisibleDistance) {
-                // Hide sphere if too far
-                if (sphereData.isVisible) {
-                    sphereData.mesh.visible = false;
-                    sphereData.coreMesh.visible = false;
-                    sphereData.isVisible = false;
-                    
-                    // Turn off light
-                    const light = this.sphereLights[i];
-                    if (light) {
-                        light.intensity = 0;
-                    }
-                }
-                continue; // Skip update for invisible spheres
-            } else if (distanceToCamera > this.cullDistance) {
-                // Reduce quality for distant spheres
-                if (sphereData.isVisible) {
-                    sphereData.mesh.visible = true;
-                    sphereData.coreMesh.visible = false; // Hide core for distant spheres
-                    sphereData.isVisible = true;
-                    
-                    // Reduce light intensity
-                    const light = this.sphereLights[i];
-                    if (light) {
-                        light.intensity = sphereData.lightIntensity * 0.3;
-                    }
-                }
-            } else {
-                // Full quality for near spheres
-                if (!sphereData.isVisible || !sphereData.coreMesh.visible) {
-                    sphereData.mesh.visible = true;
-                    sphereData.coreMesh.visible = true;
-                    sphereData.isVisible = true;
-                }
+            // Automatic sphere hiding disabled as requested - all spheres remain visible
+            // Ensure all spheres are always visible
+            if (!sphereData.mesh.visible) {
+                sphereData.mesh.visible = true;
+                sphereData.coreMesh.visible = true;
+                sphereData.isVisible = true;
             }
             
             // Update position with enhanced movement
             sphereData.position.add(sphereData.velocity);
             
-            // Enhanced boundary wrapping with tunnel consideration
+            // Enhanced boundary wrapping with new Z-axis range (-50 to +100)
             const maxX = this.baseRadius * 1.5;
             const maxY = this.baseRadius * 1.5;
-            const maxZ = this.tunnelLength / 2;
+            const minZ = this.zOffset; // -50
+            const maxZ = this.zOffset + this.tunnelLength; // +100
             
             if (sphereData.position.x > maxX) sphereData.position.x = -maxX;
             if (sphereData.position.x < -maxX) sphereData.position.x = maxX;
             if (sphereData.position.y > maxY) sphereData.position.y = -maxY;
             if (sphereData.position.y < -maxY) sphereData.position.y = maxY;
-            if (sphereData.position.z > maxZ) sphereData.position.z = -maxZ;
-            if (sphereData.position.z < -maxZ) sphereData.position.z = maxZ;
+            if (sphereData.position.z > maxZ) sphereData.position.z = minZ;
+            if (sphereData.position.z < minZ) sphereData.position.z = maxZ;
             
             // Update phase for pulsing
             sphereData.phase += sphereData.pulseSpeed;
@@ -722,9 +753,7 @@ class EnhancedBubbleUniverse {
             const light = this.sphereLights[i];
             if (light && sphereData.isVisible) {
                 light.position.copy(sphereData.position);
-                if (distanceToCamera <= this.cullDistance) {
-                    light.intensity = sphereData.lightIntensity * pulse;
-                }
+                light.intensity = sphereData.lightIntensity * pulse;
             }
             
             // Velocity damping
@@ -773,11 +802,74 @@ class EnhancedBubbleUniverse {
         }
     }
     
+    shouldUpdate(system) {
+        return this.frameCount % this.updateIntervals[system] === 0;
+    }
+    
+    updateFrustumCulling() {
+        // Update frustum for culling
+        this.camera.updateMatrixWorld();
+        this.cameraMatrix.multiplyMatrices(
+            this.camera.projectionMatrix,
+            this.camera.matrixWorldInverse
+        );
+        this.frustum.setFromProjectionMatrix(this.cameraMatrix);
+        
+        let visibleCount = 0;
+        for (let i = 0; i < this.sphereCount; i++) {
+            const sphereData = this.sphereData[i];
+            const sphere = new THREE.Sphere(
+                sphereData.position, 
+                sphereData.scale * 1.5
+            );
+            
+            const isInFrustum = this.frustum.intersectsSphere(sphere);
+            
+            if (sphereData.inFrustum !== isInFrustum) {
+                sphereData.inFrustum = isInFrustum;
+                // Additional culling logic can be added here
+            }
+            
+            if (isInFrustum) visibleCount++;
+        }
+        
+        return visibleCount;
+    }
+    
     animate() {
+        const currentTime = performance.now();
+        this.deltaTime = currentTime - this.lastTime;
         this.time += 0.016;
         
-        // Update systems
+        // Physics update (every frame)
         this.updateSpheres();
+        
+        // Mouse interaction (every 2 frames)
+        if (this.shouldUpdate('mouse')) {
+            // Mouse interaction is handled in onMouseMove
+        }
+        
+        // Distance culling (every 5 frames)
+        if (this.shouldUpdate('distance')) {
+            // Distance culling is handled in updateSpheres
+        }
+        
+        // Lighting updates (every 3 frames)
+        if (this.shouldUpdate('lighting')) {
+            // Lighting updates are handled in updateSpheres
+        }
+        
+        // Frustum culling (every 10 frames)
+        if (this.shouldUpdate('frustum')) {
+            this.updateFrustumCulling();
+        }
+        
+        // LOD system (every 15 frames)
+        if (this.shouldUpdate('lod')) {
+            // LOD logic is integrated into updateSpheres
+        }
+        
+        // Ripple updates (every frame)
         this.updateRipples();
         
         // Camera is now fixed - no movement
