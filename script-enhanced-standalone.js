@@ -12,7 +12,7 @@ class EnhancedBubbleUniverse {
         this.hoveredSphere = null;
         
         // Hybrid sphere system - Near spheres (individual) + Far spheres (instanced)
-        this.sphereCount = 10; // Reduced from 50 for performance
+        this.sphereCount = 300; // Reduced from 50 for performance
         this.nearSpheres = []; // Individual meshes for near spheres
         this.farInstancedMesh = null; // InstancedMesh for far spheres
         this.sphereMeshes = []; // All sphere meshes for raycasting
@@ -55,10 +55,10 @@ class EnhancedBubbleUniverse {
             lod: 15           // Every 15 frames
         };
         
-        // Spatial configuration - Updated: Z: -50 to +100, baseRadius: 200 (expanded X-axis)
-        this.baseRadius = 200; // Expanded from 100 to 200 for wider X-axis range
-        this.tunnelLength = 150; // -50 to +100 = 150 range
-        this.zOffset = -50; // Start from Z = -50
+        // Spatial configuration - Updated: X(±500), Y(±100), Z(-100 to +200)
+        this.baseRadius = 500; // Expanded to 500 for X-axis range ±500
+        this.tunnelLength = 300; // -100 to +200 = 300 range
+        this.zOffset = -100; // Start from Z = -100
         this.maxRadiusMultiplier = 1.2;
         
         // Frustum culling
@@ -137,10 +137,14 @@ class EnhancedBubbleUniverse {
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         this.renderer.useLegacyLights = false;
         this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        this.renderer.toneMappingExposure = 1.2;
+        this.renderer.toneMappingExposure = 2.5; // 鏡面効果用に明るく
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+        this.renderer.physicallyCorrectLights = true; // 物理ベースレンダリング強化
+        
+        // 鏡面背景の設定
+        this.scene.background = new THREE.Color(0xf8f8ff); // ゴーストホワイト
     }
     
     setupCamera() {
@@ -196,7 +200,7 @@ class EnhancedBubbleUniverse {
         try {
             // Load multiple textures
             this.sphereTextures = [];
-            const textureFiles = ['texture/1.png', 'texture/3.png'];
+            const textureFiles = ['texture/1.png','texture/3.png'];
             
             for (const file of textureFiles) {
                 try {
@@ -306,28 +310,24 @@ class EnhancedBubbleUniverse {
     
     
     generateSpherePosition(index) {
-        // Z-axis: -50 to +100 range (150 total length)
+        // Z-axis: -100 to +200 range (300 total length)
         const normalizedIndex = index / this.sphereCount;
-        const z = (normalizedIndex * this.tunnelLength) + this.zOffset; // -50 to +100
+        const z = (normalizedIndex * this.tunnelLength) + this.zOffset; // -100 to +200
         
         // Camera distance for FOV-based positioning
-        const cameraDistance = 150 - z; // Distance from camera at (0,0,150)
+        const cameraDistance = 160 - z; // Distance from camera at (0,0,160)
         
         // FOV-based maximum radius calculation
         const fov = 100 * Math.PI / 180; // 100 degrees in radians
-        const maxViewRadius = Math.tan(fov / 2) * cameraDistance * 0.75; // Use 75% of view
+        const maxViewRadius = Math.tan(fov / 2) * Math.abs(cameraDistance) * 0.75; // Use 75% of view
         
-        // Depth-based radius with FOV consideration
-        const baseRadius = Math.min(this.baseRadius, maxViewRadius * 0.6);
-        const radiusRandom = Math.random() * 0.8 + 0.2; // 0.2 to 1.0
-        const radius = baseRadius * radiusRandom;
+        // New range-based positioning: X(±500), Y(±300)
+        const maxX = 500;
+        const maxY = 300;
         
-        // Radial distribution
-        const angle = Math.random() * Math.PI * 2;
-        
-        // Enhanced distribution for better visibility
-        const x = Math.cos(angle) * radius;
-        const y = Math.sin(angle) * radius;
+        // Random distribution within the new ranges
+        const x = (Math.random() - 0.5) * 2 * maxX; // -500 to +500
+        const y = (Math.random() - 0.5) * 2 * maxY; // -300 to +300
         
         return {
             x: x,
@@ -377,7 +377,7 @@ class EnhancedBubbleUniverse {
             this.sphereMeshes.push(sphereMesh);
             this.sphereMaterials.push(material);
             
-            // Create glowing core
+            // Create glowing core (static)
             const coreMaterial = new THREE.MeshBasicMaterial({
                 color: color,
                 transparent: true,
@@ -389,6 +389,7 @@ class EnhancedBubbleUniverse {
             coreMesh.scale.setScalar(scale * 0.4);
             this.scene.add(coreMesh);
             this.glowingCores.push(coreMesh);
+            
             
             // Create point light only for selected spheres to avoid WebGL limits
             if (i < this.maxLights) {
@@ -712,12 +713,12 @@ class EnhancedBubbleUniverse {
             // Update position with enhanced movement
             sphereData.position.add(sphereData.velocity);
             
-            // Enhanced boundary wrapping with new Z-axis range (-50 to +100)
-            const maxX = this.baseRadius * 1.5;
-            const maxY = this.baseRadius * 1.5;
-            const minZ = this.zOffset; // -50
-            const maxZ = this.zOffset + this.tunnelLength; // +100
-            
+            // Enhanced boundary wrapping with new ranges: X(±500), Y(±300), Z(-100 to +200)
+            const maxX = 500;  // ±500
+            const maxY = 300;  // ±300
+            const minZ = -100; // -100
+            const maxZ = +100; // +100
+
             if (sphereData.position.x > maxX) sphereData.position.x = -maxX;
             if (sphereData.position.x < -maxX) sphereData.position.x = maxX;
             if (sphereData.position.y > maxY) sphereData.position.y = -maxY;
@@ -748,6 +749,7 @@ class EnhancedBubbleUniverse {
             
             sphereData.coreMesh.position.copy(sphereData.position);
             sphereData.coreMesh.scale.setScalar(currentScale * 0.4);
+            
             
             // Update light (only if it exists and sphere is visible)
             const light = this.sphereLights[i];
