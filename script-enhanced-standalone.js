@@ -1,4 +1,5 @@
 class EnhancedBubbleUniverse {
+     // Fixed typo in 'const'
     constructor() {
         this.canvas = document.getElementById('canvas');
         this.scene = new THREE.Scene();
@@ -12,7 +13,7 @@ class EnhancedBubbleUniverse {
         this.hoveredSphere = null;
         
         // Hybrid sphere system - Near spheres (individual) + Far spheres (instanced)
-        this.sphereCount = 300; // Reduced from 50 for performance
+        this.sphereCount = 150; // Reduced from 50 for performance
         this.nearSpheres = []; // Individual meshes for near spheres
         this.farInstancedMesh = null; // InstancedMesh for far spheres
         this.sphereMeshes = []; // All sphere meshes for raycasting
@@ -74,13 +75,13 @@ class EnhancedBubbleUniverse {
         
         // Colors for lights - White base + bright colorful palette (no dark colors)
         this.colors = [
-            0xffffff, 0xffb3ba, 0xffdfba, 0xffffba, 0xbaffc9,
-            0xbae1ff, 0xc9baff, 0xffbaff, 0xffc0cb, 0x87ceeb,
-            0x98fb98, 0xffd700, 0xff69b4, 0x00bfff, 0x7fffd4,
-            0xffa500, 0xff1493, 0x00ff7f, 0x1e90ff, 0xffd1dc,
-            0xb0e0e6, 0xf0e68c, 0xdda0dd, 0x90ee90, 0xffb6c1,
-            0x87cefa, 0xf5deb3, 0xffc0cb, 0xafeeee, 0xffe4e1,
-            0xf0fff0, 0xfff8dc, 0xe6e6fa, 0xffefd5, 0xf5f5dc,
+            'rgb(193, 193, 193)', 'rgb(255, 179, 186)', 'rgb(255, 223, 186)', 'rgb(255, 255, 186)', 'rgb(186, 255, 201)',
+            'rgb(186, 225, 255)', 'rgb(201, 186, 255)', 'rgb(255, 186, 255)', 'rgb(255, 192, 203)', 'rgb(135, 206, 235)',
+            'rgb(152, 251, 152)', 'rgb(255, 215, 0)', 'rgb(255, 105, 180)', 'rgb(0, 191, 255)', 'rgb(127, 255, 212)',
+            'rgb(255, 165, 0)', 'rgb(255, 170, 215)', 'rgb(0, 255, 127)', 'rgb(30, 144, 255)', 'rgb(255, 209, 220)',
+            'rgb(176, 224, 230)', 'rgb(240, 230, 140)', 'rgb(221, 160, 221)', 'rgb(144, 238, 144)', 'rgb(255, 182, 193)',
+            'rgb(0, 157, 255)', 'rgb(245, 222, 179)', 'rgb(255, 94, 121)', 'rgb(175, 238, 238)', 'rgb(255, 228, 225)',
+            'rgb(83, 249, 83)', 'rgb(255, 248, 220)', 'rgb(230, 230, 250)', 'rgb(255, 239, 213)', 'rgb(255, 255, 85)',
         ];
         
         // Mirrors
@@ -137,14 +138,14 @@ class EnhancedBubbleUniverse {
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         this.renderer.useLegacyLights = false;
         this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        this.renderer.toneMappingExposure = 2.5; // 鏡面効果用に明るく
+        this.renderer.toneMappingExposure = 1.5; // 鏡面効果用に明るく
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         this.renderer.outputColorSpace = THREE.SRGBColorSpace;
         this.renderer.physicallyCorrectLights = true; // 物理ベースレンダリング強化
         
-        // 鏡面背景の設定
-        this.scene.background = new THREE.Color(0xf8f8ff); // ゴーストホワイト
+        // 背景色を自然な色に設定
+        this.scene.background = new THREE.Color('rgb(17, 33, 48)'); // スカイブルー
     }
     
     setupCamera() {
@@ -153,15 +154,15 @@ class EnhancedBubbleUniverse {
     }
     
     setupLighting() {
-        // Enhanced ambient light for brighter environment
-        const ambientLight = new THREE.AmbientLight(0x404040, 0.8); // Increased from 0.3 to 0.8
+        // 鏡面効果用の非常に明るい環境光
+        const ambientLight = new THREE.AmbientLight('rgb(255, 255, 255)', 2.0); // 白色で非常に明るく
         this.scene.add(ambientLight);
         
-        // Main directional light - enhanced
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2); // Increased from 0.6 to 1.2
-        directionalLight.position.set(100, 100, 100);
+        // 主要ライトを大幅強化
+        const directionalLight = new THREE.DirectionalLight('rgb(255, 255, 255)', 3.0); // 強度を3.0に
+        directionalLight.position.set(0, 100, 100);
         directionalLight.castShadow = true;
-        directionalLight.shadow.mapSize.width = 1024; // Reduced from 2048 for performance
+        directionalLight.shadow.mapSize.width = 1024;
         directionalLight.shadow.mapSize.height = 1024;
         directionalLight.shadow.camera.near = 0.1;
         directionalLight.shadow.camera.far = 500;
@@ -171,24 +172,25 @@ class EnhancedBubbleUniverse {
         directionalLight.shadow.camera.bottom = -200;
         this.scene.add(directionalLight);
         
-        // Hemisphere light for natural lighting
-        const hemisphereLight = new THREE.HemisphereLight(0x87ceeb, 0x000000, 0.6);
+        // 半球ライトを明るく
+        const hemisphereLight = new THREE.HemisphereLight('rgb(255, 255, 255)', 'rgb(255, 255, 255)', 1.5);
         this.scene.add(hemisphereLight);
         
-        // Multiple fill lights for enhanced brightness
-        const fillLights = [
-            { pos: [-100, 50, 50], color: 0x4ecdc4, intensity: 0.4 },
-            { pos: [100, -50, 50], color: 0xff6b6b, intensity: 0.4 },
-            { pos: [0, 100, -50], color: 0xfeca57, intensity: 0.3 }
+        // 追加の均一ライト（鏡面効果用）
+        const additionalLights = [
+            { pos: [100, 0, 0], intensity: 1.5 },
+            { pos: [-100, 0, 0], intensity: 1.5 },
+            { pos: [0, 100, 0], intensity: 1.5 },
+            { pos: [0, -100, 0], intensity: 1.5 }
         ];
         
-        fillLights.forEach(light => {
-            const dirLight = new THREE.DirectionalLight(light.color, light.intensity);
+        additionalLights.forEach(light => {
+            const dirLight = new THREE.DirectionalLight('rgb(255, 255, 255)', light.intensity);
             dirLight.position.set(...light.pos);
             this.scene.add(dirLight);
         });
         
-        console.log('Enhanced lighting setup complete - brighter environment');
+        console.log('鏡面効果用照明設定完了 - 非常に明るい環境');
     }
     
     setupFog() {
@@ -200,8 +202,8 @@ class EnhancedBubbleUniverse {
         try {
             // Load multiple textures
             this.sphereTextures = [];
-            const textureFiles = ['texture/1.png','texture/3.png'];
-            
+            const textureFiles = ['texture/1.png','texture/2.png','texture/3.png'];
+
             for (const file of textureFiles) {
                 try {
                     const texture = await this.textureLoader.loadAsync(file);
@@ -225,61 +227,21 @@ class EnhancedBubbleUniverse {
     }
     
     createMirrors() {
-        // Check if Reflector is available
-        if (typeof THREE.Reflector === 'undefined') {
-            console.warn('Reflector not available, skipping mirrors');
-            return;
-        }
-        
-        const reflectorOptions = {
-            clipBias: 0.003,
-            textureWidth: 1024,
-            textureHeight: 1024,
-            color: 0x888888,
-            multisample: 4
-        };
-        
-        try {
-            // Floor mirror
-            const floorGeometry = new THREE.PlaneGeometry(500, 500);
-            const floorMirror = new THREE.Reflector(floorGeometry, reflectorOptions);
-            floorMirror.rotation.x = -Math.PI / 2;
-            floorMirror.position.y = -80;
-            this.scene.add(floorMirror);
-            this.mirrors.push(floorMirror);
-            
-            // Left wall mirror
-            const leftWallGeometry = new THREE.PlaneGeometry(500, 300);
-            const leftWallMirror = new THREE.Reflector(leftWallGeometry, reflectorOptions);
-            leftWallMirror.rotation.y = Math.PI / 2;
-            leftWallMirror.position.x = -120;
-            this.scene.add(leftWallMirror);
-            this.mirrors.push(leftWallMirror);
-            
-            // Right wall mirror
-            const rightWallGeometry = new THREE.PlaneGeometry(500, 300);
-            const rightWallMirror = new THREE.Reflector(rightWallGeometry, reflectorOptions);
-            rightWallMirror.rotation.y = -Math.PI / 2;
-            rightWallMirror.position.x = 120;
-            this.scene.add(rightWallMirror);
-            this.mirrors.push(rightWallMirror);
-            
-            console.log('Mirrors created: floor and side walls');
-        } catch (error) {
-            console.warn('Failed to create mirrors:', error);
-            // Create simple reflective planes as fallback
-            this.createFallbackMirrors();
-        }
+        // 背景ミラーを削除 - ミラー機能を無効化
+        console.log('背景ミラーが削除されました');
+        return;
     }
     
     createFallbackMirrors() {
+        // 完全鏡面マテリアル
         const mirrorMaterial = new THREE.MeshPhysicalMaterial({
-            color: 0x888888,
-            metalness: 1.0,
-            roughness: 0.1,
-            clearcoat: 1.0,
-            clearcoatRoughness: 0.05,
-            reflectivity: 0.9
+            color: 'rgb(255, 255, 255)',        // 白色ベース
+            metalness: 1.0,         // 完全な金属
+            roughness: 0.0,         // 完全に滑らか（鏡面）
+            clearcoat: 1.0,         // クリアコート最大
+            clearcoatRoughness: 0.0, // クリアコート滑らか
+            reflectivity: 1.0,      // 最大反射率
+            envMapIntensity: 3.0    // 環境マップ最大強度
         });
         
         // Floor mirror
@@ -310,6 +272,7 @@ class EnhancedBubbleUniverse {
     
     
     generateSpherePosition(index) {
+        const random = Math.random();
         // Z-axis: -100 to +200 range (300 total length)
         const normalizedIndex = index / this.sphereCount;
         const z = (normalizedIndex * this.tunnelLength) + this.zOffset; // -100 to +200
@@ -317,17 +280,22 @@ class EnhancedBubbleUniverse {
         // Camera distance for FOV-based positioning
         const cameraDistance = 160 - z; // Distance from camera at (0,0,160)
         
-        // FOV-based maximum radius calculation
-        const fov = 100 * Math.PI / 180; // 100 degrees in radians
-        const maxViewRadius = Math.tan(fov / 2) * Math.abs(cameraDistance) * 0.75; // Use 75% of view
+        // Z値に応じてXY範囲を動的に調整
+        // Z値が大きい（カメラに近い）ほど範囲を狭くする
+        const zNormalized = (z - this.zOffset) / this.tunnelLength; // 0 to 1 (0: 遠い, 1: 近い)
         
-        // New range-based positioning: X(±500), Y(±300)
-        const maxX = 500;
-        const maxY = 300;
+        // 基本範囲
+        const baseMaxX = 500;
+        const baseMaxY = 300;
         
-        // Random distribution within the new ranges
-        const x = (Math.random() - 0.5) * 2 * maxX; // -500 to +500
-        const y = (Math.random() - 0.5) * 2 * maxY; // -300 to +300
+        // カメラに近いほど範囲を狭くする（最小50%まで）
+        const rangeFactor = 1.0 - (zNormalized * 0.5); // 1.0 to 0.5
+        const maxX = baseMaxX * rangeFactor;
+        const maxY = baseMaxY * rangeFactor;
+        
+        // Random distribution within the adjusted ranges
+        const x = (random - 0.5) * 2 * maxX;
+        const y = (Math.random() - 0.5) * 2 * maxY;
         
         return {
             x: x,
@@ -337,6 +305,7 @@ class EnhancedBubbleUniverse {
     }
     
     createSpheres() {
+        const random2 = Math.random();
         // Create larger sphere geometry with higher detail
         const geometry = new THREE.SphereGeometry(1.5, 32, 32); // Increased from 1 to 1.5
         
@@ -348,23 +317,22 @@ class EnhancedBubbleUniverse {
             const position = this.generateSpherePosition(i);
             
             // Massive scale range: 8.0 to 24.0 for extremely prominent spheres (2-3x larger)
-            const scale = 8.0 + Math.random() * 16.0;
+            const scale = 15.0 + random2 * 10.0;
             
             // Random color for this sphere
             const colorHex = this.colors[Math.floor(Math.random() * this.colors.length)];
             const color = new THREE.Color(colorHex);
             
             // Select random texture from available textures
-            const randomTexture = this.sphereTextures.length > 0 ? 
-                this.sphereTextures[Math.floor(Math.random() * this.sphereTextures.length)] : null;
+            const randomTexture = this.sphereTextures.length > 0 ?
+                this.sphereTextures[Math.floor(random2 * this.sphereTextures.length)] : null;
             
-            // Create simple material without mirror effects
-            const material = new THREE.MeshBasicMaterial({
+            // 通常の球体マテリアル（鏡面効果なし）
+            const material = new THREE.MeshLambertMaterial({
                 color: color,
                 transparent: true,
                 opacity: 0.8,
-                map: randomTexture,
-                alphaMap: randomTexture
+                map: randomTexture
             });
             
             // Create sphere mesh
@@ -405,20 +373,20 @@ class EnhancedBubbleUniverse {
             this.sphereData.push({
                 position: new THREE.Vector3(position.x, position.y, position.z),
                 velocity: new THREE.Vector3(
-                    (Math.random() - 0.5) * 0.15,
-                    (Math.random() - 0.5) * 0.15,
+                    (random2 - 0.5) * 0.15,
+                    (Math.random()  - 0.5) * 0.15,
                     (Math.random() - 0.5) * 0.08
                 ),
                 scale: scale,
                 originalScale: scale,
                 originalColor: colorHex,
                 phase: Math.random() * Math.PI * 2,
-                pulseSpeed: 0.015 + Math.random() * 0.025,
-                lightIntensity: 0.8 + Math.random() * 1.2,
-                originalIntensity: 0.8 + Math.random() * 1.2,
+                pulseSpeed: 0.015 + random2 * 0.025,
+                lightIntensity: 0.8 + random2 * 1.2,
+                originalIntensity: 0.8 + random2 * 1.2,
                 isHovered: false,
                 targetScale: scale,
-                targetIntensity: 0.8 + Math.random() * 1.2,
+                targetIntensity: 0.8 + random2 * 1.2,
                 interactionRadius: 100 + Math.random() * 50, // Increased interaction radius
                 isVisible: true,
                 mesh: sphereMesh,

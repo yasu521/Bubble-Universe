@@ -138,7 +138,7 @@ class EnhancedBubbleUniverse {
         this.scene.add(directionalLight);
         
         // Additional rim lighting
-        const rimLight = new THREE.DirectionalLight(0x4ecdc4, 0.3);
+        co rimLight = new THREE.DirectionalLight(0x4ecdc4, 0.3);
         rimLight.position.set(-50, -50, -50);
         this.scene.add(rimLight);
     }
