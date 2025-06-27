@@ -12,16 +12,16 @@ class EnhancedBubbleUniverse {
         this.mouse = new THREE.Vector2();
         this.hoveredSphere = null;
         
-        // Hybrid sphere system - Near spheres (individual) + Far spheres (instanced)
-        this.sphereCount = 200; // Reduced from 50 for performance
-        this.nearSpheres = []; // Individual meshes for near spheres
-        this.farInstancedMesh = null; // InstancedMesh for far spheres
-        this.sphereMeshes = []; // All sphere meshes for raycasting
+        // Optimized sphere system with InstancedMesh for better performance
+        this.sphereCount = 200; // Optimized count for high FPS
+        this.instancedSpheres = null; // InstancedMesh for main spheres
+        this.instancedCores = null; // InstancedMesh for cores
+        this.sphereMeshes = []; // Individual meshes for raycasting (reduced set)
         this.sphereLights = [];
         this.sphereData = [];
         this.sphereMaterials = []; // Individual materials for near spheres
         this.glowingCores = []; // Internal glowing objects
-        this.maxLights = 15; // Reduced from 20
+        this.maxLights = 8; // Further reduced for better performance
         
         // LOD system
         this.nearDistance = 80;
@@ -93,6 +93,20 @@ class EnhancedBubbleUniverse {
         // Mirrors
         this.mirrors = [];
         
+        // Background color animation system
+        this.backgroundColorTime = 0;
+        this.backgroundColors = [
+            new THREE.Color('rgb(70, 140, 210)'),   // Deep blue
+            new THREE.Color('rgb(100, 70, 150)'),   // Deep purple
+            new THREE.Color('rgb(68, 170, 120)'),   // Deep green
+            new THREE.Color('rgb(220, 170, 110)'),   // Deep brown
+            new THREE.Color('rgb(255, 170, 225)'),   // Deep violet
+            new THREE.Color('rgb(250, 250, 100)'),   // Deep teal
+        ];
+        this.currentBgColorIndex = 0;
+        this.nextBgColorIndex = 1;
+        this.bgColorTransitionSpeed = 0.0008; // Very slow transition
+        
         console.log('Enhanced BubbleUniverse initializing...');
         this.init();
     }
@@ -141,17 +155,20 @@ class EnhancedBubbleUniverse {
     
     setupRenderer() {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5)); // Reduced for better FPS
         this.renderer.useLegacyLights = false;
         this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        this.renderer.toneMappingExposure = 1.5; // 鏡面効果用に明るく
-        this.renderer.shadowMap.enabled = true;
-        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        this.renderer.toneMappingExposure = 1.5;
+        this.renderer.shadowMap.enabled = false; // Disabled shadows for better FPS
         this.renderer.outputColorSpace = THREE.SRGBColorSpace;
-        this.renderer.physicallyCorrectLights = true; // 物理ベースレンダリング強化
+        this.renderer.physicallyCorrectLights = false; // Disabled for better FPS
         
-        // 背景色を自然な色に設定
-        this.scene.background = new THREE.Color('rgb(17, 33, 48)'); // スカイブルー
+        // Performance optimizations
+        this.renderer.powerPreference = "high-performance";
+        this.renderer.antialias = false; // Disabled for better FPS
+        
+        // 背景色を自然な色に設定（初期値）
+        this.scene.background = new THREE.Color('rgb(17, 33, 48)');
     }
     
     setupCamera() {
@@ -312,11 +329,11 @@ class EnhancedBubbleUniverse {
     
     createSpheres() {
         const random2 = Math.random();
-        // Create larger sphere geometry with higher detail
-        const geometry = new THREE.SphereGeometry(1.5, 32, 32); // Increased from 1 to 1.5
+        // Create optimized sphere geometry for better FPS
+        const geometry = new THREE.SphereGeometry(1.5, 16, 16); // Reduced from 32,32 to 16,16 for better FPS
         
-        // Create glowing core geometry
-        const coreGeometry = new THREE.SphereGeometry(0.5, 16, 16);
+        // Create optimized glowing core geometry
+        const coreGeometry = new THREE.SphereGeometry(0.5, 12, 12); // Reduced from 16,16 to 12,12 for better FPS
         
         // Create individual spheres with texture support
         for (let i = 0; i < this.sphereCount; i++) {
@@ -766,14 +783,32 @@ class EnhancedBubbleUniverse {
         this.frameCount++;
         const currentTime = performance.now();
         
-        if (currentTime - this.lastTime >= 1000) {
-            this.fps = Math.round((this.frameCount * 1000) / (currentTime - this.lastTime));
+        // より高精度なFPS計算（100ms間隔で更新）
+        if (currentTime - this.lastTime >= 100) {
+            const deltaTime = currentTime - this.lastTime;
+            const instantFPS = (this.frameCount * 1000) / deltaTime;
+            
+            // 移動平均でスムージング（より安定したFPS表示）
+            if (this.fpsHistory === undefined) {
+                this.fpsHistory = [];
+                this.fpsSum = 0;
+            }
+            
+            this.fpsHistory.push(instantFPS);
+            this.fpsSum += instantFPS;
+            
+            // 最新10サンプルの移動平均
+            if (this.fpsHistory.length > 10) {
+                this.fpsSum -= this.fpsHistory.shift();
+            }
+            
+            this.fps = Math.round(this.fpsSum / this.fpsHistory.length * 10) / 10; // 小数点1桁まで表示
             this.frameCount = 0;
             this.lastTime = currentTime;
             
             const fpsElement = document.getElementById('fps');
             if (fpsElement) {
-                fpsElement.textContent = this.fps;
+                fpsElement.textContent = this.fps.toFixed(1);
             }
         }
     }
@@ -812,36 +847,61 @@ class EnhancedBubbleUniverse {
         return visibleCount;
     }
     
+    updateBackgroundColor() {
+        // Update background color transition time
+        this.backgroundColorTime += this.bgColorTransitionSpeed;
+        
+        // Check if we need to move to next color
+        if (this.backgroundColorTime >= 1.0) {
+            this.backgroundColorTime = 0.0;
+            this.currentBgColorIndex = this.nextBgColorIndex;
+            this.nextBgColorIndex = (this.nextBgColorIndex + 1) % this.backgroundColors.length;
+        }
+        
+        // Interpolate between current and next background colors
+        const currentColor = this.backgroundColors[this.currentBgColorIndex];
+        const nextColor = this.backgroundColors[this.nextBgColorIndex];
+        
+        const interpolatedColor = new THREE.Color();
+        interpolatedColor.lerpColors(currentColor, nextColor, this.backgroundColorTime);
+        
+        // Apply the interpolated color to scene background
+        this.scene.background.copy(interpolatedColor);
+    }
+
     animate() {
         const currentTime = performance.now();
         this.deltaTime = currentTime - this.lastTime;
         this.time += 0.016;
         
+        // Update background color (every frame for smooth transition)
+        this.updateBackgroundColor();
+        
         // Physics update (every frame)
         this.updateSpheres();
         
-        // Mouse interaction (every 2 frames)
+        // Mouse interaction (every 3 frames for better performance)
         if (this.shouldUpdate('mouse')) {
             // Mouse interaction is handled in onMouseMove
         }
         
-        // Distance culling (every 5 frames)
-        if (this.shouldUpdate('distance')) {
+        // Distance culling (every 8 frames for better performance)
+        if (this.frameCount % 8 === 0) {
             // Distance culling is handled in updateSpheres
         }
         
-        // Lighting updates (every 3 frames)
-        if (this.shouldUpdate('lighting')) {
+        // Lighting updates (every 4 frames for better performance)
+        if (this.frameCount % 4 === 0) {
             // Lighting updates are handled in updateSpheres
         }
         
-        // Frustum culling (every 10 frames)
-        if (this.shouldUpdate('frustum')) {
+        // Frustum culling (every 15 frames for better performance)
+        if (this.frameCount % 15 === 0) {
             this.updateFrustumCulling();
         }
         
-        // LOD system (every 15 frames)
-        if (this.shouldUpdate('lod')) {
+        // LOD system (every 20 frames for better performance)
+        if (this.frameCount % 20 === 0) {
             // LOD logic is integrated into updateSpheres
         }
         
