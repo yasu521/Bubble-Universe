@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>トランザクションアニメーション</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #000;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            transition: opacity 1s ease-out;
+            opacity: 1; /* 初期状態で表示するように変更 */
+        }
+        
+        #loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 1.5em;
+            z-index: 20;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        #content {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none; /* 初期状態で非表示 */
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            background-color: #000;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            z-index: 5;
+        }
+        
+        .visible {
+            opacity: 1 !important;
+        }
+        
+        h1 {
+            font-size: 3em;
+            margin-bottom: 0.5em;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            background: linear-gradient(45deg, #4ecdc4, #45b7d1);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-size: 1.2em;
+            cursor: pointer;
+            margin-top: 2em;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(78, 205, 196, 0.6);
+        }
+        
+        /* デバッグ情報用のスタイル */
+        #debug-info {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            color: white;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            z-index: 30;
+            max-width: 400px;
+            max-height: 200px;
+            overflow: auto;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading">ロード中...</div>
+    
+    <div id="canvas-container"></div>
+    
+    <div id="content">
+        <h1>コンテンツページ</h1>
+        <p>トランザクションアニメーション完了後のコンテンツです。</p>
+        <button class="btn" id="back-btn">前のページに戻る</button>
+    </div>
+    
+    <!-- デバッグ情報表示エリア -->
+    <div id="debug-info"></div>
+    
+    <!-- Three.js および関連ライブラリの直接読み込み -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/jsm/loaders/FontLoader.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/jsm/geometries/TextGeometry.js"></script>
+    
+    <script>
+        // デバッグ情報を表示する関数
+        function updateDebugInfo(message) {
+            const debugElement = document.getElementById('debug-info');
+            if (debugElement) {
+                const now = new Date();
+                const timestamp = `${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`;
+                debugElement.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+                debugElement.scrollTop = debugElement.scrollHeight;
+            }
+        }
+        
+        // コンソールログをオーバーライド
+        const originalConsoleLog = console.log;
+        const originalConsoleError = console.error;
+        const originalConsoleWarn = console.warn;
+        
+        console.log = function(message, ...args) {
+            originalConsoleLog.apply(console, [message, ...args]);
+            updateDebugInfo('LOG: ' + message);
+        };
+        
+        console.error = function(message, ...args) {
+            originalConsoleError.apply(console, [message, ...args]);
+            updateDebugInfo('ERROR: ' + message);
+        };
+        
+        console.warn = function(message, ...args) {
+            originalConsoleWarn.apply(console, [message, ...args]);
+            updateDebugInfo('WARN: ' + message);
+        };
+        
+        // Three.jsコンポーネントが利用可能かログ出力
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM ContentLoaded イベント発生');
+            console.log('THREE利用可能:', typeof THREE !== 'undefined');
+            console.log('FontLoader利用可能:', typeof THREE.FontLoader !== 'undefined' || 
+                                         typeof FontLoader !== 'undefined');
+            console.log('TextGeometry利用可能:', typeof THREE.TextGeometry !== 'undefined' || 
+                                          typeof TextGeometry !== 'undefined');
+            
+            // 戻るボタンの処理を追加
+            const backBtn = document.getElementById('back-btn');
+            if (backBtn) {
+                backBtn.addEventListener('click', function() {
+                    window.location.href = 'welcome.html';
+                });
+            }
+        });
+    </script>
+
+    <!-- トランザクションアニメーション用のスクリプト -->
+    <script src="transaction.js"></script>
+
+</body>
+</html>
