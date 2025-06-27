@@ -10,7 +10,7 @@ class EnhancedBubbleUniverse {
         this.raycaster = new THREE.Raycaster();
         this.mouse = new THREE.Vector2();
         this.hoveredSphere = null;
-        this.sphereCount = 400; // Optimized count for high FPS
+        this.sphereCount = 300; // Optimized count for high FPS
         this.instancedSpheres = null; // InstancedMesh for main spheres
         this.instancedCores = null; // InstancedMesh for cores
         this.sphereMeshes = []; // Individual meshes for raycasting (reduced set)
@@ -250,7 +250,7 @@ class EnhancedBubbleUniverse {
             const position = this.generateSpherePosition(i);
             
             // Massive scale range: 8.0 to 24.0 for extremely prominent spheres (2-3x larger)
-            const scale = 10.0 + Math.random() * 18.0;
+            const scale = 15.0 + Math.random() * 15.0;
             
             // Random color for this sphere
             const colorHex = this.colors[Math.floor(Math.random() * this.colors.length)];
