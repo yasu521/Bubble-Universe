@@ -6,11 +6,19 @@ class EnhancedBubbleUniverse {
         this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: false, alpha: true }); // Disabled antialias for performance
         this.composer = null;
         
+        // タイトル要素の参照を追加
+        this.titleElement = document.getElementById('title');
+        this.titleMovementFactor = 0.03; // タイトル移動の強さ係数（小さいほど動きが小さくなる）
+        this.titleMaxMovement = 20; // タイトル移動の最大距離（ピクセル単位）- 10から15に増加
+        // マウス位置を画面中央に初期化（中央を原点として相対座標）
+        this.mouseX = window.innerWidth / 2;
+        this.mouseY = window.innerHeight / 2;
+        
         // Raycaster for interaction
         this.raycaster = new THREE.Raycaster();
         this.mouse = new THREE.Vector2();
         this.hoveredSphere = null;
-        this.sphereCount = 300; // Optimized count for high FPS
+        this.sphereCount = 200; // Optimized count for high FPS
         this.instancedSpheres = null; // InstancedMesh for main spheres
         this.instancedCores = null; // InstancedMesh for cores
         this.sphereMeshes = []; // Individual meshes for raycasting (reduced set)
@@ -72,9 +80,9 @@ class EnhancedBubbleUniverse {
         
         // Colors for lights - White base + bright colorful palette (no dark colors)
         this.colors = [
-            'rgb(152, 251, 152)', 'rgb(127, 255, 212)',
-            'rgb(255, 170, 215)', 'rgb(0, 255, 127)', 'rgb(30, 144, 255)', 'rgb(255, 209, 220)',
-            'rgb(255, 20, 147)', 'rgb(255, 69, 0)', 'rgb(255, 140, 0)',
+            'rgb(152, 251, 152)', 
+            'rgb(255, 170, 215)', 'rgb(0, 255, 127)',
+            'rgb(255, 20, 147)',  'rgb(255, 140, 0)',
             'rgb(255, 215, 0)', 'rgb(173, 255, 47)',
             'rgb(0, 255, 255)', 'rgb(30, 144, 255)', 'rgb(138, 43, 226)',
             'rgb(255, 0, 255)', 'rgb(220, 20, 60)', 'rgb(255, 99, 71)',
@@ -89,12 +97,11 @@ class EnhancedBubbleUniverse {
         this.mirrors = [];
         this.backgroundColorTime = 0;
         this.backgroundColors = [
-            new THREE.Color('rgb(222, 222, 222)'),
-            new THREE.Color('rgb(222, 222, 135)'), 
-            new THREE.Color('rgb(100, 222, 135)'),
-            new THREE.Color('rgb(222, 222, 222)'),
-            new THREE.Color('rgb(100, 255, 225)'),
-            new THREE.Color('rgb(255, 100, 100)'),
+            new THREE.Color('rgb(232, 232, 232)'),
+            new THREE.Color('rgb(255, 255, 232)'), 
+            new THREE.Color('rgb(200, 255, 232)'),
+            new THREE.Color('rgb(232, 232, 255)'),
+            new THREE.Color('rgb(255, 232, 232)'),
         ];
         this.currentBgColorIndex = 0;
         this.nextBgColorIndex = 1;
@@ -112,6 +119,11 @@ class EnhancedBubbleUniverse {
             this.setupLighting();
             this.createSpheres();
             
+            // タイトル位置を初期化
+            if (this.titleElement) {
+                this.titleElement.style.transform = 'translate(-50%, -50%)';
+            }
+            
             console.log('Setting up post-processing...');
             this.setupPostProcessing();
             
@@ -122,10 +134,10 @@ class EnhancedBubbleUniverse {
             this.animate();
             
             // Hide title after 4 seconds
-            setTimeout(() => {
-                const title = document.getElementById('title');
-                if (title) title.classList.add('fade-out');
-            }, 2000);
+            // setTimeout(() => {
+            //     const title = document.getElementById('title');
+            //     if (title) title.classList.add('fade-out');
+            // }, 4000);
         } catch (error) {
             console.error('Failed to initialize Enhanced BubbleUniverse:', error);
         }
@@ -409,6 +421,13 @@ class EnhancedBubbleUniverse {
         this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
         this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
         
+        // マウス位置を更新（ウィンドウ中心を原点とした相対位置）
+        this.mouseX = (event.clientX - window.innerWidth / 2);
+        this.mouseY = (event.clientY - window.innerHeight / 2);
+        
+        // タイトル要素を動かす
+        this.updateTitlePosition();
+        
         // Perform raycasting (limited for performance)
         if (this.frameCount % 3 === 0) {
             this.performRaycast();
@@ -416,6 +435,18 @@ class EnhancedBubbleUniverse {
         
         // Mouse interaction with spheres
         this.updateMouseInteraction(event.clientX, event.clientY);
+    }
+    
+    // タイトル位置を更新するメソッドを追加
+    updateTitlePosition() {
+        if (this.titleElement) {
+            // ウィンドウの中央を基準にした相対的なマウス位置を計算
+            const relativeMouseX = this.mouseX - window.innerWidth / 2;
+            const relativeMouseY = this.mouseY - window.innerHeight / 2;
+            const moveX = Math.min(Math.max(-this.titleMaxMovement, relativeMouseX * this.titleMovementFactor), this.titleMaxMovement);
+            const moveY = Math.min(Math.max(-this.titleMaxMovement, relativeMouseY * this.titleMovementFactor), this.titleMaxMovement);
+            this.titleElement.style.transform = `translate(calc(-50% + ${moveX}px), calc(-50% + ${moveY}px))`;
+        }
     }
     
     updateMouseInteraction(mouseX, mouseY) {
@@ -751,6 +782,9 @@ class EnhancedBubbleUniverse {
         this.deltaTime = currentTime - this.lastTime;
         this.time += 0.016;
         this.updateBackgroundColor();
+
+        // タイトル要素の位置更新（滑らかな動きのため毎フレーム実行）
+        this.updateTitlePosition();
 
         this.updateSpheres();
         if (this.shouldUpdate('mouse')) {

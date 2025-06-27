@@ -52,18 +52,18 @@ body {
             text-align: center;
             z-index: 200;
             opacity: 1;
-            transition: opacity 3s ease-out;
+            transition: opacity 3s ease-out, transform 0.3s ease-out;
             pointer-events: none;
         }
         
         #title h1 {
             font-size: 4em;
             margin: 0;
-            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #feca57, #ff9ff3);
+            background: linear-gradient(45deg,#EF233C, #FF9F1C, #2E8BC0,#0A1128);
             background-size: 400% 400%;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            animation: gradientShift 4s ease-in-out infinite;
+            animation: gradientShift 8s ease-in-out infinite;
             text-shadow: 0 0 30px rgba(255,255,255,0.3);
         }
         
