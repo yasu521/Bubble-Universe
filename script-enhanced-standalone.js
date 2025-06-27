@@ -1,5 +1,4 @@
 class EnhancedBubbleUniverse {
-     // Fixed typo in 'const'
     constructor() {
         this.canvas = document.getElementById('canvas');
         this.scene = new THREE.Scene();
@@ -11,8 +10,6 @@ class EnhancedBubbleUniverse {
         this.raycaster = new THREE.Raycaster();
         this.mouse = new THREE.Vector2();
         this.hoveredSphere = null;
-        
-        // Optimized sphere system with InstancedMesh for better performance
         this.sphereCount = 400; // Optimized count for high FPS
         this.instancedSpheres = null; // InstancedMesh for main spheres
         this.instancedCores = null; // InstancedMesh for cores
@@ -90,12 +87,14 @@ class EnhancedBubbleUniverse {
         
         // Mirrors
         this.mirrors = [];
-        
-        // Background color animation system
         this.backgroundColorTime = 0;
         this.backgroundColors = [
-            new THREE.Color('rgb(255, 255, 255)'),
-            new THREE.Color('rgb(255, 255, 255)'), 
+            new THREE.Color('rgb(222, 222, 222)'),
+            new THREE.Color('rgb(222, 222, 135)'), 
+            new THREE.Color('rgb(100, 222, 135)'),
+            new THREE.Color('rgb(222, 222, 222)'),
+            new THREE.Color('rgb(100, 255, 225)'),
+            new THREE.Color('rgb(255, 100, 100)'),
         ];
         this.currentBgColorIndex = 0;
         this.nextBgColorIndex = 1;
@@ -107,23 +106,10 @@ class EnhancedBubbleUniverse {
     
     async init() {
         try {
-            console.log('Setting up renderer...');
             this.setupRenderer();
-            
-            console.log('Setting up camera...');
             this.setupCamera();
-            
-            console.log('Loading textures...');
             await this.loadTextures();
-            
-            console.log('Setting up lighting and fog...');
             this.setupLighting();
-            this.setupFog();
-            
-            console.log('Creating mirrors...');
-            this.createMirrors();
-            
-            console.log('Creating spheres...');
             this.createSpheres();
             
             console.log('Setting up post-processing...');
@@ -140,8 +126,6 @@ class EnhancedBubbleUniverse {
                 const title = document.getElementById('title');
                 if (title) title.classList.add('fade-out');
             }, 2000);
-            
-            console.log('Enhanced BubbleUniverse initialized successfully!');
         } catch (error) {
             console.error('Failed to initialize Enhanced BubbleUniverse:', error);
         }
@@ -156,27 +140,21 @@ class EnhancedBubbleUniverse {
         this.renderer.shadowMap.enabled = false; // Disabled shadows for better FPS
         this.renderer.outputColorSpace = THREE.SRGBColorSpace;
         this.renderer.physicallyCorrectLights = false; // Disabled for better FPS
-        
+
         // Performance optimizations
         this.renderer.powerPreference = "high-performance";
-        this.renderer.antialias = false; // Disabled for better FPS
-        
-        // 背景色を自然な色に設定（初期値）
-        this.scene.background = new THREE.Color('rgb(17, 33, 48)');
+        this.renderer.antialias = true;
+        this.scene.background = new THREE.Color('rgba(255, 255, 255, 0)');
     }
     
     setupCamera() {
-        this.camera.position.set(0, 0, 160); // Moved +10 in Z direction
+        this.camera.position.set(0, 0, 160);
         this.camera.lookAt(0, 0, 0);
     }
-    
     setupLighting() {
-        // 鏡面効果用の非常に明るい環境光
-        const ambientLight = new THREE.AmbientLight('rgb(255, 255, 255)', 2.0); // 白色で非常に明るく
+        const ambientLight = new THREE.AmbientLight('rgb(255, 255, 255)', 1.0);
         this.scene.add(ambientLight);
-        
-        // 主要ライトを大幅強化
-        const directionalLight = new THREE.DirectionalLight('rgb(255, 255, 255)', 3.0); // 強度を3.0に
+        const directionalLight = new THREE.DirectionalLight('rgb(255, 255, 255)', 3.0);
         directionalLight.position.set(0, 100, 100);
         directionalLight.castShadow = true;
         directionalLight.shadow.mapSize.width = 1024;
@@ -188,12 +166,8 @@ class EnhancedBubbleUniverse {
         directionalLight.shadow.camera.top = 200;
         directionalLight.shadow.camera.bottom = -200;
         this.scene.add(directionalLight);
-        
-        // 半球ライトを明るく
         const hemisphereLight = new THREE.HemisphereLight('rgb(255, 255, 255)', 'rgb(255, 255, 255)', 1.5);
         this.scene.add(hemisphereLight);
-        
-        // 追加の均一ライト（鏡面効果用）
         const additionalLights = [
             { pos: [100, 0, 0], intensity: 1.5 },
             { pos: [-100, 0, 0], intensity: 1.5 },
@@ -206,18 +180,9 @@ class EnhancedBubbleUniverse {
             dirLight.position.set(...light.pos);
             this.scene.add(dirLight);
         });
-        
-        console.log('鏡面効果用照明設定完了 - 非常に明るい環境');
     }
-    
-    setupFog() {
-        // Fog removed as requested
-        // this.scene.fog = new THREE.FogExp2(0x000011, this.fogDensity);
-    }
-    
     async loadTextures() {
         try {
-            // Load multiple textures
             this.sphereTextures = [];
             const textureFiles = ['texture/3.png'];
 
@@ -235,58 +200,11 @@ class EnhancedBubbleUniverse {
                     console.warn(`Failed to load texture ${file}:`, error);
                 }
             }
-            
-            console.log(`Loaded ${this.sphereTextures.length} textures successfully`);
         } catch (error) {
             console.warn('Failed to load textures:', error);
             this.sphereTextures = [];
         }
     }
-    
-    createMirrors() {
-        // 背景ミラーを削除 - ミラー機能を無効化
-        console.log('背景ミラーが削除されました');
-        return;
-    }
-    
-    createFallbackMirrors() {
-        // 完全鏡面マテリアル
-        const mirrorMaterial = new THREE.MeshPhysicalMaterial({
-            color: 'rgb(255, 255, 255)',        // 白色ベース
-            metalness: 1.0,         // 完全な金属
-            roughness: 0.0,         // 完全に滑らか（鏡面）
-            clearcoat: 1.0,         // クリアコート最大
-            clearcoatRoughness: 0.0, // クリアコート滑らか
-            reflectivity: 1.0,      // 最大反射率
-            envMapIntensity: 3.0    // 環境マップ最大強度
-        });
-        
-        // Floor mirror
-        const floorGeometry = new THREE.PlaneGeometry(500, 500);
-        const floorMirror = new THREE.Mesh(floorGeometry, mirrorMaterial);
-        floorMirror.rotation.x = -Math.PI / 2;
-        floorMirror.position.y = -80;
-        floorMirror.receiveShadow = true;
-        this.scene.add(floorMirror);
-        
-        // Side mirrors
-        const sideGeometry = new THREE.PlaneGeometry(500, 300);
-        
-        const leftMirror = new THREE.Mesh(sideGeometry, mirrorMaterial);
-        leftMirror.rotation.y = Math.PI / 2;
-        leftMirror.position.x = -120;
-        this.scene.add(leftMirror);
-        
-        const rightMirror = new THREE.Mesh(sideGeometry, mirrorMaterial);
-        rightMirror.rotation.y = -Math.PI / 2;
-        rightMirror.position.x = 120;
-        this.scene.add(rightMirror);
-        
-        console.log('Fallback mirrors created');
-        
-        // Giant inner sphere removed as requested
-    }
-    
     
     generateSpherePosition(index) {
         const random = Math.random();
@@ -297,9 +215,7 @@ class EnhancedBubbleUniverse {
         // Camera distance for FOV-based positioning
         const cameraDistance = 150 - z; // Distance from camera at (0,0,160)
         
-        // Z値に応じてXY範囲を動的に調整
-        // Z値が大きい（カメラに近い）ほど範囲を狭くする
-        const zNormalized = (z - this.zOffset) / this.tunnelLength; // 0 to 1 (0: 遠い, 1: 近い)
+        const zNormalized = (z - this.zOffset) / this.tunnelLength; // 0 to 1
         
         // 基本範囲
         const baseMaxX = 300;
@@ -413,8 +329,6 @@ class EnhancedBubbleUniverse {
         }
         
         console.log(`Created ${this.sphereCount} enhanced spheres with textures`);
-        
-        // Update sphere count display
         const sphereCountElement = document.getElementById('sphere-count');
         if (sphereCountElement) {
             sphereCountElement.textContent = this.sphereCount;
@@ -473,27 +387,6 @@ class EnhancedBubbleUniverse {
             const touch = event.touches[0];
             this.onMouseClick(touch);
         });
-        
-        // Control sliders
-        const fogSlider = document.getElementById('fog-slider');
-        const sphereSlider = document.getElementById('sphere-slider');
-        
-        if (fogSlider) {
-            fogSlider.addEventListener('input', (e) => {
-                this.fogDensity = parseFloat(e.target.value);
-                this.scene.fog.density = this.fogDensity;
-                document.getElementById('fog-density').textContent = this.fogDensity.toFixed(4);
-            });
-        }
-        
-        if (sphereSlider) {
-            sphereSlider.addEventListener('input', (e) => {
-                const newCount = parseInt(e.target.value);
-                if (newCount !== this.sphereCount) {
-                    this.updateSphereCount(newCount);
-                }
-            });
-        }
     }
     
     updateSphereCount(newCount) {
@@ -776,13 +669,10 @@ class EnhancedBubbleUniverse {
     calculateFPS() {
         this.frameCount++;
         const currentTime = performance.now();
-        
-        // より高精度なFPS計算（100ms間隔で更新）
+
         if (currentTime - this.lastTime >= 100) {
             const deltaTime = currentTime - this.lastTime;
             const instantFPS = (this.frameCount * 1000) / deltaTime;
-            
-            // 移動平均でスムージング（より安定したFPS表示）
             if (this.fpsHistory === undefined) {
                 this.fpsHistory = [];
                 this.fpsSum = 0;
@@ -790,13 +680,12 @@ class EnhancedBubbleUniverse {
             
             this.fpsHistory.push(instantFPS);
             this.fpsSum += instantFPS;
-            
-            // 最新10サンプルの移動平均
+
             if (this.fpsHistory.length > 10) {
                 this.fpsSum -= this.fpsHistory.shift();
             }
             
-            this.fps = Math.round(this.fpsSum / this.fpsHistory.length * 10) / 10; // 小数点1桁まで表示
+            this.fps = Math.round(this.fpsSum / this.fpsHistory.length * 10) / 10;
             this.frameCount = 0;
             this.lastTime = currentTime;
             
@@ -812,7 +701,6 @@ class EnhancedBubbleUniverse {
     }
     
     updateFrustumCulling() {
-        // Update frustum for culling
         this.camera.updateMatrixWorld();
         this.cameraMatrix.multiplyMatrices(
             this.camera.projectionMatrix,
@@ -832,7 +720,6 @@ class EnhancedBubbleUniverse {
             
             if (sphereData.inFrustum !== isInFrustum) {
                 sphereData.inFrustum = isInFrustum;
-                // Additional culling logic can be added here
             }
             
             if (isInFrustum) visibleCount++;
@@ -842,17 +729,13 @@ class EnhancedBubbleUniverse {
     }
     
     updateBackgroundColor() {
-        // Update background color transition time
         this.backgroundColorTime += this.bgColorTransitionSpeed;
-        
-        // Check if we need to move to next color
         if (this.backgroundColorTime >= 1.0) {
             this.backgroundColorTime = 0.0;
             this.currentBgColorIndex = this.nextBgColorIndex;
             this.nextBgColorIndex = (this.nextBgColorIndex + 1) % this.backgroundColors.length;
         }
-        
-        // Interpolate between current and next background colors
+
         const currentColor = this.backgroundColors[this.currentBgColorIndex];
         const nextColor = this.backgroundColors[this.nextBgColorIndex];
         
@@ -867,14 +750,9 @@ class EnhancedBubbleUniverse {
         const currentTime = performance.now();
         this.deltaTime = currentTime - this.lastTime;
         this.time += 0.016;
-        
-        // Update background color (every frame for smooth transition)
         this.updateBackgroundColor();
-        
-        // Physics update (every frame)
+
         this.updateSpheres();
-        
-        // Mouse interaction (every 3 frames for better performance)
         if (this.shouldUpdate('mouse')) {
             // Mouse interaction is handled in onMouseMove
         }
@@ -896,23 +774,20 @@ class EnhancedBubbleUniverse {
         
         // LOD system (every 20 frames for better performance)
         if (this.frameCount % 20 === 0) {
-            // LOD logic is integrated into updateSpheres
+
         }
-        
-        // Ripple updates (every frame)
+
         this.updateRipples();
         if (this.composer) {
             this.composer.render();
         } else {
             this.renderer.render(this.scene, this.camera);
         }
-        
         this.calculateFPS();
         requestAnimationFrame(() => this.animate());
     }
 }
 
-// Initialize when page loads
 window.addEventListener('DOMContentLoaded', () => {
     console.log('DOM loaded, creating Enhanced BubbleUniverse...');
     new EnhancedBubbleUniverse();
