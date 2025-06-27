@@ -8,7 +8,6 @@
         body {
             margin: 0;
             padding: 0;
-            overflow: hidden;
             background: linear-gradient(135deg, #000428, #004e92);
             font-family: 'Arial', sans-serif;
             color: white;
@@ -100,10 +99,53 @@
             66% { transform: translateY(20px) translateX(-15px) rotate(240deg); }
             100% { transform: translateY(0) translateX(0) rotate(360deg); }
         }
+        
+        /* オーバーレイトランジション用のスタイル */
+        .transition-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: black;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.8s ease-in-out;
+        }
+        
+        .transition-active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        /* トランジション中のローディングインジケーター */
+        .transition-loader {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 5px solid rgba(78, 205, 196, 0.2);
+            border-top: 5px solid #4ecdc4;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
     </style>
 </head>
 <body>
     <div class="background" id="bubble-container"></div>
+    
+    <!-- トランジションオーバーレイ -->
+    <div class="transition-overlay" id="transition-overlay">
+        <!-- ローダーを非表示に -->
+    </div>
     
     <div class="container">
         <h1>Bubble Universe</h1>
@@ -135,15 +177,38 @@
                 container.appendChild(bubble);
             }
             
+            // もし他のページからの遷移の場合はオーバーレイをフェードアウト
+            const transitionOverlay = document.getElementById('transition-overlay');
+            const transitionDirection = sessionStorage.getItem('transitionDirection');
+            
+            if (transitionDirection === 'backward') {
+                console.log('他のページからの遷移を検出');
+                transitionOverlay.classList.add('transition-active');
+                
+                // ページ読み込み完了後に少し待ってからフェードアウト
+                setTimeout(() => {
+                    transitionOverlay.classList.remove('transition-active');
+                    sessionStorage.removeItem('transitionDirection');
+                }, 10);
+            }
+            
             // トランジションボタンのクリックイベント
             const startBtn = document.getElementById('start-btn');
             startBtn.addEventListener('click', () => {
                 console.log('トランジション開始ボタンがクリックされました - index.htmlに移動します');
-                // 一旦コンソールに記録
+                
+                // セッションストレージに情報を記録
                 sessionStorage.setItem('transitionStarted', 'true');
                 sessionStorage.setItem('transitionStartTime', new Date().toString());
-                // トランザクションページに遷移
-                window.location.href = 'index.html';
+                sessionStorage.setItem('transitionDirection', 'forward');
+                
+                // オーバーレイを表示
+                transitionOverlay.classList.add('transition-active');
+                
+                // 少し待ってから遷移
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 10);
             });
         });
     </script>

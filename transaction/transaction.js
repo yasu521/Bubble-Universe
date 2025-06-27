@@ -32,11 +32,21 @@ class TransactionAnimation {
         
         // アニメーションパラメータ
         this.animationDuration = 1.5;  // 各ドーナツのアニメーション時間（秒）
-        this.delayBetweenDonuts = 0.3; // ドーナツ間の遅延時間（秒）
+        this.delayBetweenDonuts = 0.1; // ドーナツ間の遅延時間（秒）を短くして20枚でも全体の長さを調整
         this.finalDelay = 0.5;         // 最終段階後の遅延時間（秒）
-        this.zPositions = [5, 4, 3]; // 初期Z位置
-        this.targetZ = [-3, -2, 0];     // 終了位置Z
-        this.resetZ = [-1, -1, -1];      // リセット位置Z（個別に設定）
+        
+        // 20枚のドーナツ用の配列を準備
+        this.donutCount = 10; // ドーナツの枚数
+        this.rotationAngle = 15; // 各ドーナツの回転角度（度）
+        
+        // 初期Z位置（深さ方向に少しずつずらす）
+        this.zPositions = Array.from({ length: this.donutCount }, (_, i) => 7 + (i * 0.2));
+        
+        // 終了位置Z（個別に設定可能）
+        this.targetZ = Array.from({ length: this.donutCount }, (_, i) => 5 - (i * 0.5));
+        
+        // リセット位置Z（個別に設定）
+        this.resetZ = Array.from({ length: this.donutCount }, (_, i) =>5 - (i * 0.5));
         
         // 文字表示パラメータ
         this.textMesh = null;
@@ -54,8 +64,12 @@ class TransactionAnimation {
         // 時間管理
         this.clock = new THREE.Clock();
         this.elapsedTime = 0;
-        this.startTimes = [0, this.delayBetweenDonuts, this.delayBetweenDonuts * 2];
-        this.phases = [0, 0, 0]; // 0: 待機, 1: アニメーション中, 2: 完了
+        
+        // 各ドーナツの開始時間を計算（等間隔に配置）
+        this.startTimes = Array.from({ length: this.donutCount }, (_, i) => i * this.delayBetweenDonuts);
+        
+        // 各ドーナツのアニメーションフェーズ（0: 待機, 1: アニメーション中, 2: 完了）
+        this.phases = Array(this.donutCount).fill(0);
         
         // セットアップ
         this.init();
@@ -71,6 +85,9 @@ class TransactionAnimation {
     init() {
         console.log('init メソッド開始');
         this.setupScene();
+        
+        // トランジションオーバーレイのチェック
+        const transitionOverlay = document.getElementById('transition-overlay');
         
         // テクスチャとフォントのロード処理
         console.log('テクスチャとフォントのロード開始');
@@ -115,6 +132,15 @@ class TransactionAnimation {
                 if (this.loadingElement) {
                     this.loadingElement.classList.add('hidden');
                     console.log('ローディング表示を非表示にしました');
+                }
+                
+                // オーバーレイを徐々に非表示にする
+                const transitionOverlay = document.getElementById('transition-overlay');
+                if (transitionOverlay) {
+                    setTimeout(() => {
+                        transitionOverlay.classList.add('transition-hidden');
+                        console.log('トランジションオーバーレイをフェードアウト');
+                    }, 500); // アニメーション開始後少し待ってからフェードアウト
                 }
                 
                 this.animate();
@@ -197,8 +223,8 @@ class TransactionAnimation {
         const aspectRatio = this.width / this.height;
         const size = Math.max(4, 4 * aspectRatio); // 画面アスペクト比に合わせたサイズ
         
-        // 3枚のドーナツを作成
-        for (let i = 0; i < 3; i++) {
+        // 指定枚数のドーナツを作成
+        for (let i = 0; i < this.donutCount; i++) {
             const geometry = new THREE.PlaneGeometry(size * 2, size * 2);
             const material = new THREE.MeshBasicMaterial({
                 map: this.donutTexture,
@@ -209,11 +235,22 @@ class TransactionAnimation {
             });
             
             const mesh = new THREE.Mesh(geometry, material);
+            
+            // Z位置の設定
             mesh.position.z = this.zPositions[i];
-            mesh.scale.set(1, 1, 1);
+            
+            // 各ドーナツに23度の回転を与える（累積）
+            const rotationRad = THREE.MathUtils.degToRad(this.rotationAngle * i);
+            mesh.rotation.z = rotationRad;
+            
+            // スケールの設定（各ドーナツのサイズを少しずつ変える）
+            const scaleFactor = 1.0 - (i * 0.01); // 後ろのドーナツほど少し小さく
+            mesh.scale.set(scaleFactor, scaleFactor, 1);
             
             this.donutMeshes.push(mesh);
             this.scene.add(mesh);
+            
+            console.log(`ドーナツ ${i+1}/${this.donutCount} を作成: 位置Z=${mesh.position.z}, 回転=${this.rotationAngle * i}度`);
         }
     }
     
@@ -451,37 +488,29 @@ class TransactionAnimation {
             return;
         }
         
+        // オーバーレイを表示
+        const transitionOverlay = document.getElementById('transition-overlay');
+        if (transitionOverlay) {
+            transitionOverlay.classList.remove('transition-hidden');
+            console.log('トランジションオーバーレイを表示');
+            
+            // セッションストレージにトランジション情報を設定
+            sessionStorage.setItem('transitionStarted', 'true');
+            sessionStorage.setItem('transitionStartTime', new Date().toString());
+            sessionStorage.setItem('transitionDirection', 'forward');
+        }
+        
         container.style.transition = `opacity ${this.fadeOutDuration}s ease-out`;
         container.style.opacity = '0';
         console.log(`フェードアウト設定: ${this.fadeOutDuration}秒後に完了予定`);
         
-        // フェードアウト後にコンテンツを表示または次のページへ遷移
+        // フェードアウト後に必ずcontent.htmlに遷移
         setTimeout(() => {
             console.log('フェードアウト完了、次のアクション実行', { nextPageUrl: this.nextPageUrl });
             
-            if (this.nextPageUrl && this.nextPageUrl !== 'content.html') {
-                // 外部ページに遷移
-                console.log(`ページ遷移開始: ${this.nextPageUrl}`);
-                window.location.href = this.nextPageUrl;
-            } else {
-                // 同一ページ内のコンテンツを表示
-                container.classList.add('hidden');
-                console.log('キャンバスコンテナを非表示に設定');
-                
-                const contentElement = document.getElementById('content');
-                if (!contentElement) {
-                    console.error('コンテンツ要素が見つかりません');
-                    return;
-                }
-                
-                contentElement.style.display = 'flex';
-                console.log('コンテンツ要素の表示スタイルを設定');
-                
-                setTimeout(() => {
-                    contentElement.classList.add('visible');
-                    console.log('コンテンツ要素を可視化');
-                }, 100);
-            }
+            // 常にcontent.htmlに遷移
+            console.log('content.htmlへのページ遷移を開始します');
+            window.location.href = 'content.html';
         }, this.fadeOutDuration * 1000);
     }
     
@@ -528,12 +557,17 @@ class TransactionAnimation {
     }
     
     resetDonutsPosition() {
-        // すべてのドーナツを瞬時に初期位置の後方に移動
+        // すべてのドーナツを個別のリセット位置に移動
         for (let i = 0; i < this.donutMeshes.length; i++) {
             const mesh = this.donutMeshes[i];
-            // リセット位置を配列で指定している場合は個別の値を使用、そうでなければ共通の値を使用
-            const resetPosition = Array.isArray(this.resetZ) ? this.resetZ[i] : this.resetZ;
-            mesh.position.z = resetPosition;
+            // 配列の範囲内かチェック
+            if (i < this.resetZ.length) {
+                mesh.position.z = this.resetZ[i];
+            } else {
+                // 範囲外の場合はデフォルト値
+                mesh.position.z = -3;
+            }
+            console.log(`ドーナツ ${i+1} をリセット位置 Z=${mesh.position.z} に移動`);
         }
     }
     
@@ -542,16 +576,24 @@ class TransactionAnimation {
         this.isAnimating = true;
         this.animationComplete = false;
         this.elapsedTime = 0;
-        this.phases = [0, 0, 0];
+        this.phases = Array(this.donutCount).fill(0);
         
         // コンテンツを非表示
         const contentElement = document.getElementById('content');
-        contentElement.classList.remove('visible');
+        if (contentElement) {
+            contentElement.classList.remove('visible');
+        }
         
         // ドーナツを初期位置に戻す
         for (let i = 0; i < this.donutMeshes.length; i++) {
             const mesh = this.donutMeshes[i];
-            mesh.position.z = this.zPositions[i];
+            // 配列の範囲内かチェック
+            if (i < this.zPositions.length) {
+                mesh.position.z = this.zPositions[i];
+            } else {
+                // 範囲外の場合はデフォルト値
+                mesh.position.z = 5;
+            }
             mesh.material.opacity = 0;
         }
     }

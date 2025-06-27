@@ -96,19 +96,55 @@
             max-height: 200px;
             overflow: auto;
         }
+        
+        /* オーバーレイトランジション用のスタイル */
+        .transition-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: black;
+            z-index: 100;
+            opacity: 1; /* 初期状態では表示 */
+            pointer-events: all;
+            transition: opacity 0.8s ease-in-out;
+        }
+        
+        .transition-hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        /* トランジション中のローディングインジケーター */
+        .transition-loader {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 5px solid rgba(78, 205, 196, 0.2);
+            border-top: 5px solid #4ecdc4;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
     </style>
 </head>
 <body>
-    <div id="loading">ロード中...</div>
-    
     <div id="canvas-container"></div>
     
-    <div id="content">
-        <h1>コンテンツページ</h1>
-        <p>トランザクションアニメーション完了後のコンテンツです。</p>
-        <button class="btn" id="back-btn">前のページに戻る</button>
-    </div>
+    <div id="loading" class="hidden">読み込み中...</div>
     
+    <!-- トランジションオーバーレイ -->
+    <div class="transition-overlay" id="transition-overlay">
+        <!-- ローダーを非表示に -->
+    </div>
     <!-- デバッグ情報表示エリア -->
     <div id="debug-info"></div>
     
@@ -162,8 +198,40 @@
             const backBtn = document.getElementById('back-btn');
             if (backBtn) {
                 backBtn.addEventListener('click', function() {
-                    window.location.href = 'welcome.html';
+                    // オーバーレイを表示してからページ遷移
+                    const transitionOverlay = document.getElementById('transition-overlay');
+                    if (transitionOverlay) {
+                        // セッションストレージにトランジション情報を設定
+                        sessionStorage.setItem('transitionStarted', 'true');
+                        sessionStorage.setItem('transitionStartTime', new Date().toString());
+                        sessionStorage.setItem('transitionDirection', 'backward');
+                        
+                        // オーバーレイを表示
+                        transitionOverlay.classList.remove('transition-hidden');
+                        
+                        // アニメーションが完了したらページ遷移
+                        setTimeout(function() {
+                            window.location.href = 'welcome.html';
+                        }, 800); // 0.8秒後に遷移（オーバーレイのフェード時間に合わせる）
+                    } else {
+                        console.error('トランジションオーバーレイ要素が見つかりません');
+                        window.location.href = 'welcome.html';
+                    }
                 });
+            }
+            
+            // 前のページからの遷移をチェック
+            const transitionDirection = sessionStorage.getItem('transitionDirection');
+            const transitionOverlay = document.getElementById('transition-overlay');
+            
+            if (transitionDirection && transitionOverlay) {
+                console.log(`前のページからの遷移を検出: ${transitionDirection}`);
+                
+                // オーバーレイを表示した状態から開始
+                transitionOverlay.classList.remove('transition-hidden');
+                
+                // トランジションアニメーションが準備できたらオーバーレイを非表示にする
+                // トランジションアニメーションの初期化と読み込みが完了したときにこれを呼び出す
             }
         });
     </script>
