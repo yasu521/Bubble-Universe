@@ -4,112 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bubble Universe - Enhanced</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background: #000;
-            overflow: hidden;
-            font-family: Arial, sans-serif;
-            color: white;
-        }
-        
-        canvas {
-            display: block;
-            cursor: crosshair;
-        }
-        
-        #info {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            z-index: 100;
-            background: rgba(0,0,0,0.8);
-            padding: 15px;
-            border-radius: 10px;
-            border: 1px solid rgba(255,255,255,0.3);
-            backdrop-filter: blur(10px);
-        }
-        
-        #info h3 {
-            margin: 0 0 10px 0;
-            color: #4ecdc4;
-        }
-        
-        #info p {
-            margin: 5px 0;
-            font-size: 14px;
-        }
-        
-        #title {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            z-index: 200;
-            opacity: 1;
-            transition: opacity 3s ease-out;
-            pointer-events: none;
-        }
-        
-        #title h1 {
-            font-size: 4em;
-            margin: 0;
-            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #feca57, #ff9ff3);
-            background-size: 400% 400%;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: gradientShift 4s ease-in-out infinite;
-            text-shadow: 0 0 30px rgba(255,255,255,0.3);
-        }
-        
-        #title p {
-            font-size: 1.3em;
-            margin: 15px 0;
-            opacity: 0.9;
-            text-shadow: 0 0 20px rgba(255,255,255,0.2);
-        }
-        
-        @keyframes gradientShift {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-        }
-        
-        .fade-out {
-            opacity: 0 !important;
-        }
-        
-        #controls {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            z-index: 100;
-            background: rgba(0,0,0,0.7);
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-        
-        #controls label {
-            display: block;
-            margin: 5px 0;
-            font-size: 12px;
-        }
-        
-        #controls input[type="range"] {
-            width: 150px;
-            margin-left: 10px;
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div id="title">
         <h1>Enhanced Bubble Universe</h1>
     </div>
-    
     <canvas id="canvas"></canvas>
-
+    <div class="blur-overlay"></div>
     <!-- Three.js CDN -->
     <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
     <script src="https://unpkg.com/three@0.158.0/examples/js/postprocessing/EffectComposer.js"></script>

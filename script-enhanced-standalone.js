@@ -13,7 +13,7 @@ class EnhancedBubbleUniverse {
         this.hoveredSphere = null;
         
         // Optimized sphere system with InstancedMesh for better performance
-        this.sphereCount = 500; // Optimized count for high FPS
+        this.sphereCount = 400; // Optimized count for high FPS
         this.instancedSpheres = null; // InstancedMesh for main spheres
         this.instancedCores = null; // InstancedMesh for cores
         this.sphereMeshes = []; // Individual meshes for raycasting (reduced set)
@@ -94,10 +94,8 @@ class EnhancedBubbleUniverse {
         // Background color animation system
         this.backgroundColorTime = 0;
         this.backgroundColors = [
-            new THREE.Color('rgb(140, 210, 251)'),
-            new THREE.Color('rgb(190, 252, 193)'),
-            new THREE.Color('rgb(255, 170, 170)'),   
-            new THREE.Color('rgb(255, 170, 255)'),   
+            new THREE.Color('rgb(255, 255, 255)'),
+            new THREE.Color('rgb(255, 255, 255)'), 
         ];
         this.currentBgColorIndex = 0;
         this.nextBgColorIndex = 1;
@@ -141,7 +139,7 @@ class EnhancedBubbleUniverse {
             setTimeout(() => {
                 const title = document.getElementById('title');
                 if (title) title.classList.add('fade-out');
-            }, 4000);
+            }, 2000);
             
             console.log('Enhanced BubbleUniverse initialized successfully!');
         } catch (error) {
