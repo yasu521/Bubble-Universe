@@ -13,7 +13,7 @@ class EnhancedBubbleUniverse {
         this.hoveredSphere = null;
         
         // Optimized sphere system with InstancedMesh for better performance
-        this.sphereCount = 200; // Optimized count for high FPS
+        this.sphereCount = 500; // Optimized count for high FPS
         this.instancedSpheres = null; // InstancedMesh for main spheres
         this.instancedCores = null; // InstancedMesh for cores
         this.sphereMeshes = []; // Individual meshes for raycasting (reduced set)
@@ -58,8 +58,8 @@ class EnhancedBubbleUniverse {
         
         // Spatial configuration - Updated: X(±500), Y(±100), Z(-100 to +200)
         this.baseRadius = 500; // Expanded to 500 for X-axis range ±500
-        this.tunnelLength = 300; // -100 to +200 = 300 range
-        this.zOffset = -100; // Start from Z = -100
+        this.tunnelLength = 100; // -100 to +200 = 300 range
+        this.zOffset = -100; // Start from Z = -150
         this.maxRadiusMultiplier = 1.2;
         
         // Frustum culling
@@ -71,16 +71,14 @@ class EnhancedBubbleUniverse {
         this.useWebWorker = false;
         
         // Fog settings - Reduced for brighter environment
-        this.fogDensity = 0.0003; // Reduced from 0.0007
+        this.fogDensity = 0.0007; // Reduced from 0.0007
         
         // Colors for lights - White base + bright colorful palette (no dark colors)
         this.colors = [
-            'rgb(193, 193, 193)', 'rgb(255, 179, 186)', 'rgb(255, 223, 186)', 'rgb(255, 255, 186)', 'rgb(186, 255, 201)',
-            'rgb(186, 225, 255)', 'rgb(201, 186, 255)', 'rgb(255, 186, 255)', 'rgb(255, 192, 203)', 'rgb(135, 206, 235)',
-            'rgb(152, 251, 152)', 'rgb(255, 215, 0)', 'rgb(255, 105, 180)', 'rgb(0, 191, 255)', 'rgb(127, 255, 212)',
-            'rgb(255, 165, 0)', 'rgb(255, 170, 215)', 'rgb(0, 255, 127)', 'rgb(30, 144, 255)', 'rgb(255, 209, 220)',
+            'rgb(152, 251, 152)', 'rgb(127, 255, 212)',
+            'rgb(255, 170, 215)', 'rgb(0, 255, 127)', 'rgb(30, 144, 255)', 'rgb(255, 209, 220)',
             'rgb(255, 20, 147)', 'rgb(255, 69, 0)', 'rgb(255, 140, 0)',
-            'rgb(255, 215, 0)', 'rgb(173, 255, 47)', 'rgb(0, 255, 127)',
+            'rgb(255, 215, 0)', 'rgb(173, 255, 47)',
             'rgb(0, 255, 255)', 'rgb(30, 144, 255)', 'rgb(138, 43, 226)',
             'rgb(255, 0, 255)', 'rgb(220, 20, 60)', 'rgb(255, 99, 71)',
             'rgb(255, 165, 0)', 'rgb(255, 255, 0)', 'rgb(154, 205, 50)',
@@ -96,16 +94,14 @@ class EnhancedBubbleUniverse {
         // Background color animation system
         this.backgroundColorTime = 0;
         this.backgroundColors = [
-            new THREE.Color('rgb(70, 140, 210)'),   // Deep blue
-            new THREE.Color('rgb(100, 70, 150)'),   // Deep purple
-            new THREE.Color('rgb(68, 170, 120)'),   // Deep green
-            new THREE.Color('rgb(220, 170, 110)'),   // Deep brown
-            new THREE.Color('rgb(255, 170, 225)'),   // Deep violet
-            new THREE.Color('rgb(250, 250, 100)'),   // Deep teal
+            new THREE.Color('rgb(140, 210, 251)'),
+            new THREE.Color('rgb(190, 252, 193)'),
+            new THREE.Color('rgb(255, 170, 170)'),   
+            new THREE.Color('rgb(255, 170, 255)'),   
         ];
         this.currentBgColorIndex = 0;
         this.nextBgColorIndex = 1;
-        this.bgColorTransitionSpeed = 0.0008; // Very slow transition
+        this.bgColorTransitionSpeed = 0.005; // Very slow transition
         
         console.log('Enhanced BubbleUniverse initializing...');
         this.init();
@@ -187,7 +183,7 @@ class EnhancedBubbleUniverse {
         directionalLight.castShadow = true;
         directionalLight.shadow.mapSize.width = 1024;
         directionalLight.shadow.mapSize.height = 1024;
-        directionalLight.shadow.camera.near = 0.1;
+        directionalLight.shadow.camera.near = 0.3;
         directionalLight.shadow.camera.far = 500;
         directionalLight.shadow.camera.left = -200;
         directionalLight.shadow.camera.right = 200;
@@ -225,7 +221,7 @@ class EnhancedBubbleUniverse {
         try {
             // Load multiple textures
             this.sphereTextures = [];
-            const textureFiles = ['texture/1.png'];
+            const textureFiles = ['texture/3.png'];
 
             for (const file of textureFiles) {
                 try {
@@ -301,14 +297,14 @@ class EnhancedBubbleUniverse {
         const z = (normalizedIndex * this.tunnelLength) + this.zOffset; // -100 to +200
         
         // Camera distance for FOV-based positioning
-        const cameraDistance = 160 - z; // Distance from camera at (0,0,160)
+        const cameraDistance = 150 - z; // Distance from camera at (0,0,160)
         
         // Z値に応じてXY範囲を動的に調整
         // Z値が大きい（カメラに近い）ほど範囲を狭くする
         const zNormalized = (z - this.zOffset) / this.tunnelLength; // 0 to 1 (0: 遠い, 1: 近い)
         
         // 基本範囲
-        const baseMaxX = 500;
+        const baseMaxX = 300;
         const baseMaxY = 300;
         
         // カメラに近いほど範囲を狭くする（最小50%まで）
@@ -340,7 +336,7 @@ class EnhancedBubbleUniverse {
             const position = this.generateSpherePosition(i);
             
             // Massive scale range: 8.0 to 24.0 for extremely prominent spheres (2-3x larger)
-            const scale = 25.0 + random2 * 10.0;
+            const scale = 10.0 + Math.random() * 18.0;
             
             // Random color for this sphere
             const colorHex = this.colors[Math.floor(Math.random() * this.colors.length)];
@@ -354,7 +350,7 @@ class EnhancedBubbleUniverse {
             const material = new THREE.MeshLambertMaterial({
                 color: color,
                 transparent: true,
-                opacity: 0.8,
+                opacity: 0.9,
                 map: randomTexture
             });
             
@@ -907,11 +903,6 @@ class EnhancedBubbleUniverse {
         
         // Ripple updates (every frame)
         this.updateRipples();
-        
-        // Camera is now fixed - no movement
-        // this.camera.position remains at (0, 0, 150)
-        
-        // Render with post-processing or basic renderer
         if (this.composer) {
             this.composer.render();
         } else {
