@@ -1,6 +1,6 @@
 class EnhancedBubbleUniverse {
     constructor() {
-        this.canvas = document.getElementById('canvas');
+        this.canvas = document.getElementById('canvas2');
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(100, window.innerWidth / window.innerHeight, 0.1, 2000); // FOV 100 degrees
         this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: false, alpha: true }); // Disabled antialias for performance
