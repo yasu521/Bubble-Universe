@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Me - Portfolio</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Fixed Header -->
+    <header class="fixed-header">
+        <div class="header-content">
+            <div class="logo">Portfolio</div>
+            <div class="current-section" id="currentSection">Introduction</div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-section" id="hero">
+        <div class="hero-images">
+            <div class="hero-image-slide active">
+                <img src="../texture/1.png" alt="Natural Design 1">
+            </div>
+            <div class="hero-image-slide">
+                <img src="../texture/3.png" alt="Natural Design 2">
+            </div>
+            <div class="hero-image-slide">
+                <img src="../texture/circle_mofvji.webp" alt="Natural Design 3">
+            </div>
+        </div>
+        <div class="hero-content">
+            <div class="hero-text">
+                <h1 class="hero-title">自然と調和する<br>デザインの未来をつくる</h1>
+                <p class="hero-subtitle">Creative Developer & Designer</p>
+            </div>
+        </div>
+        <div class="hero-navigation">
+            <div class="slide-indicators">
+                <span class="indicator active" data-slide="0">01</span>
+                <span class="indicator" data-slide="1">02</span>
+                <span class="indicator" data-slide="2">03</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Introduction Section -->
+    <section class="content-section" id="introduction" data-section="Introduction">
+        <div class="parallax-layer" data-speed="0.3"></div>
+        <div class="section-content">
+            <div class="content-left">
+                <div class="image-container">
+                    <img src="../texture/1.png" alt="Profile" class="section-image">
+                </div>
+            </div>
+            <div class="content-right">
+                <h2>Hello, I'm a Creative Developer</h2>
+                <p>I specialize in creating immersive digital experiences that blend cutting-edge technology with thoughtful design. My passion lies in pushing the boundaries of what's possible on the web.</p>
+                <p>With expertise in modern web technologies, I craft interactive experiences that engage users and tell compelling stories through code.</p>
+            </div>
+        </div>
+        <div class="color-inversion-zone"></div>
+    </section>
+
+    <!-- Skills Section -->
+    <section class="content-section" id="skills" data-section="Skills">
+        <div class="parallax-layer" data-speed="0.4"></div>
+        <div class="section-content reverse">
+            <div class="content-left">
+                <h2>Technical Expertise</h2>
+                <p>I work with a diverse range of technologies to bring ideas to life. From frontend frameworks to backend systems, I enjoy the full spectrum of development.</p>
+                <div class="skills-grid">
+                    <div class="skill-item">JavaScript</div>
+                    <div class="skill-item">React</div>
+                    <div class="skill-item">Node.js</div>
+                    <div class="skill-item">WebGL</div>
+                    <div class="skill-item">GSAP</div>
+                    <div class="skill-item">Three.js</div>
+                </div>
+            </div>
+            <div class="content-right">
+                <div class="image-container">
+                    <img src="../texture/3.png" alt="Skills" class="section-image">
+                </div>
+            </div>
+        </div>
+        <div class="color-inversion-zone"></div>
+    </section>
+
+    <!-- Projects Section -->
+    <section class="projects-section" id="projects" data-section="Projects">
+        <div class="projects-container">
+            <div class="projects-header">
+                <h2 class="projects-title">プロジェクト</h2>
+                <p class="projects-subtitle">PROJECTS</p>
+            </div>
+            
+            <!-- Category Filter -->
+            <div class="category-filter">
+                <button class="filter-btn active" data-category="all">すべて</button>
+                <button class="filter-btn" data-category="shop">ショップ</button>
+                <button class="filter-btn" data-category="event">イベント</button>
+                <button class="filter-btn" data-category="office">オフィス</button>
+                <button class="filter-btn" data-category="web">WEB/アプリ</button>
+                <button class="filter-btn" data-category="education">教育</button>
+            </div>
+
+            <!-- Projects Grid -->
+            <div class="projects-grid" id="projectsGrid">
+                <div class="project-item" data-category="web">
+                    <div class="project-image">
+                        <img src="../texture/1.png" alt="Interactive Web Experience">
+                    </div>
+                    <div class="project-content">
+                        <h3>インタラクティブWebエクスペリエンス</h3>
+                        <p>先進的なアニメーションによる没入型デジタルジャーニー</p>
+                        <div class="project-location">東京都渋谷区</div>
+                        <div class="project-tags">
+                            <span class="tag">WebGL</span>
+                            <span class="tag">GSAP</span>
+                            <span class="tag">React</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="project-item" data-category="shop">
+                    <div class="project-image">
+                        <img src="../texture/3.png" alt="E-commerce Platform">
+                    </div>
+                    <div class="project-content">
+                        <h3>次世代ECプラットフォーム</h3>
+                        <p>シームレスなインタラクションによるモダンなショッピング体験</p>
+                        <div class="project-location">東京都新宿区</div>
+                        <div class="project-tags">
+                            <span class="tag">Next.js</span>
+                            <span class="tag">Stripe</span>
+                            <span class="tag">MongoDB</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="project-item" data-category="office">
+                    <div class="project-image">
+                        <img src="../texture/circle_mofvji.webp" alt="Data Visualization">
+                    </div>
+                    <div class="project-content">
+                        <h3>データビジュアライゼーション</h3>
+                        <p>複雑なデータを美しく理解しやすい形に変換</p>
+                        <div class="project-location">東京都港区</div>
+                        <div class="project-tags">
+                            <span class="tag">D3.js</span>
+                            <span class="tag">Python</span>
+                            <span class="tag">PostgreSQL</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="project-item" data-category="web">
+                    <div class="project-image">
+                        <img src="../texture/1.png" alt="Mobile App">
+                    </div>
+                    <div class="project-content">
+                        <h3>クロスプラットフォームアプリ</h3>
+                        <p>ネイティブパフォーマンスを持つクロスプラットフォームソリューション</p>
+                        <div class="project-location">東京都千代田区</div>
+                        <div class="project-tags">
+                            <span class="tag">React Native</span>
+                            <span class="tag">Firebase</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="project-item" data-category="event">
+                    <div class="project-image">
+                        <img src="../texture/3.png" alt="Event Platform">
+                    </div>
+                    <div class="project-content">
+                        <h3>イベント管理プラットフォーム</h3>
+                        <p>コミュニティとつながる新しいイベント体験</p>
+                        <div class="project-location">東京都中央区</div>
+                        <div class="project-tags">
+                            <span class="tag">Vue.js</span>
+                            <span class="tag">Node.js</span>
+                            <span class="tag">WebSocket</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="project-item" data-category="education">
+                    <div class="project-image">
+                        <img src="../texture/circle_mofvji.webp" alt="Learning Platform">
+                    </div>
+                    <div class="project-content">
+                        <h3>オンライン学習プラットフォーム</h3>
+                        <p>インタラクティブな学習体験を提供する教育システム</p>
+                        <div class="project-location">東京都文京区</div>
+                        <div class="project-tags">
+                            <span class="tag">React</span>
+                            <span class="tag">GraphQL</span>
+                            <span class="tag">AWS</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="project-item" data-category="office">
+                    <div class="project-image">
+                        <img src="../texture/1.png" alt="Workspace Solution">
+                    </div>
+                    <div class="project-content">
+                        <h3>スマートワークスペース</h3>
+                        <p>働き方の未来を見据えた新しいオフィス環境</p>
+                        <div class="project-location">東京都品川区</div>
+                        <div class="project-tags">
+                            <span class="tag">IoT</span>
+                            <span class="tag">AI</span>
+                            <span class="tag">Cloud</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="project-item" data-category="shop">
+                    <div class="project-image">
+                        <img src="../texture/3.png" alt="Retail Innovation">
+                    </div>
+                    <div class="project-content">
+                        <h3>リテールイノベーション</h3>
+                        <p>デジタルとフィジカルを融合した新しい店舗体験</p>
+                        <div class="project-location">東京都表参道</div>
+                        <div class="project-tags">
+                            <span class="tag">AR</span>
+                            <span class="tag">Sensor</span>
+                            <span class="tag">Analytics</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="projects-footer">
+                <a href="#" class="view-all-btn">一覧を見る</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Solution Cards Section (Rebita風) -->
+    <section class="solution-cards-section" id="solutions" data-section="Solutions">
+        <div class="solution-intro">
+            <div class="solution-intro-bg"></div>
+            <div class="solution-intro-content">
+                <h2 class="solution-title">クリエイティブソリューション</h2>
+                <p class="solution-subtitle">CREATIVE SOLUTIONS</p>
+                <p class="solution-description">
+                    テクノロジーとデザインの融合による、次世代のクリエイティブソリューションを提供します。
+                    ユーザー体験を中心に据えた設計で、ビジネスの成長と変革をサポートします。
+                </p>
+            </div>
+        </div>
+        
+        <div class="solution-cards-container">
+            <div class="solution-card" id="card1">
+                <div class="card-header">
+                    <div class="card-number">01</div>
+                    <h3 class="card-title">インタラクティブデザイン</h3>
+                </div>
+                <div class="card-content">
+                    <p class="card-description">
+                        ユーザーとのインタラクションを重視した、魅力的で直感的なデザインを提供します。
+                        最新のウェブ技術を活用し、没入感のある体験を創出します。
+                    </p>
+                    <div class="card-image">
+                        <img src="../texture/1.png" alt="インタラクティブデザイン">
+                    </div>
+                    <a href="#" class="card-link">詳細を見る</a>
+                </div>
+            </div>
+            
+            <div class="solution-card" id="card2">
+                <div class="card-header">
+                    <div class="card-number">02</div>
+                    <h3 class="card-title">クリエイティブ開発</h3>
+                </div>
+                <div class="card-content">
+                    <p class="card-description">
+                        最先端のプログラミングとクリエイティブコーディングにより、技術的な制約を超えたビジュアル表現を実現します。
+                        WebGLやCanvas、SVGアニメーションなど、多彩な技術を駆使します。
+                    </p>
+                    <div class="card-image">
+                        <img src="../texture/3.png" alt="クリエイティブ開発">
+                    </div>
+                    <a href="#" class="card-link">詳細を見る</a>
+                </div>
+            </div>
+            
+            <div class="solution-card" id="card3">
+                <div class="card-header">
+                    <div class="card-number">03</div>
+                    <h3 class="card-title">モーショングラフィックス</h3>
+                </div>
+                <div class="card-content">
+                    <p class="card-description">
+                        静止画に命を吹き込むモーショングラフィックスで、ブランドストーリーを魅力的に表現します。
+                        スムーズなアニメーションとタイミングで、ユーザーの注目を集めます。
+                    </p>
+                    <div class="card-image">
+                        <img src="../texture/circle_mofvji.webp" alt="モーショングラフィックス">
+                    </div>
+                    <a href="#" class="card-link">詳細を見る</a>
+                </div>
+            </div>
+            
+            <div class="solution-card" id="card4">
+                <div class="card-header">
+                    <div class="card-number">04</div>
+                    <h3 class="card-title">3Dビジュアライゼーション</h3>
+                </div>
+                <div class="card-content">
+                    <p class="card-description">
+                        Three.jsやWebGLを活用した3D表現で、製品やサービスを立体的かつリアルに可視化します。
+                        インタラクティブな3Dモデルにより、ユーザーの理解と印象を深めます。
+                    </p>
+                    <div class="card-image">
+                        <img src="../texture/1.png" alt="3Dビジュアライゼーション">
+                    </div>
+                    <a href="#" class="card-link">詳細を見る</a>
+                </div>
+            </div>
+            
+            <div class="solution-card" id="card5">
+                <div class="card-header">
+                    <div class="card-number">05</div>
+                    <h3 class="card-title">没入型体験デザイン</h3>
+                </div>
+                <div class="card-content">
+                    <p class="card-description">
+                        VRやARなどの技術を駆使し、現実とデジタルの境界を超えた体験を創出します。
+                        ユーザーが物語の一部となる、感動的なデジタル体験を設計します。
+                    </p>
+                    <div class="card-image">
+                        <img src="../texture/3.png" alt="没入型体験デザイン">
+                    </div>
+                    <a href="#" class="card-link">詳細を見る</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Gallery Section -->
+    <section class="gallery-section" id="gallery" data-section="Gallery">
+        <div class="parallax-layer" data-speed="0.6"></div>
+        <div class="gallery-container">
+            <h2 class="gallery-title">Visual Journey</h2>
+            <div class="gallery-grid">
+                <div class="gallery-item">
+                    <img src="../texture/1.png" alt="Gallery 1" class="gallery-image">
+                    <div class="encryption-overlay">
+                        <div class="encrypted-text"></div>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <img src="../texture/3.png" alt="Gallery 2" class="gallery-image">
+                    <div class="encryption-overlay">
+                        <div class="encrypted-text"></div>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <img src="../texture/circle_mofvji.webp" alt="Gallery 3" class="gallery-image">
+                    <div class="encryption-overlay">
+                        <div class="encrypted-text"></div>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <img src="../texture/1.png" alt="Gallery 4" class="gallery-image">
+                    <div class="encryption-overlay">
+                        <div class="encrypted-text"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Art Section with Terminal Style -->
+    <section id="Featured--Art" class="terminal_section md:!pt-[18.9rem] pt-24 relative quadGrid">
+        <!-- Mobile Header (Visible on small screens) -->
+        <section class="mobile_terminal md:hidden block w-full">
+            <h2 class="text-3xl font-bold mb-4 scrambleText">Featured Art</h2>
+            <p class="text-base opacity-80 mb-8">
+                過去のアーティスト活動におけるハイライト作品をご紹介します。クリックして詳細をご覧いただけます。
+                テクノロジーとアートの融合を目指して制作された各作品は、インタラクティブな要素を含んでいます。
+            </p>
+        </section>
+        
+        <!-- Desktop Fixed Header (Left Panel) -->
+        <div id="__featured_art_header" class="hidden md:block md:col-span-1 md:pb-0 pb-16">
+            <div class="md:sticky md:top-[18.9rem] z-10">
+                <h2 class="text-4xl font-bold mb-6 scrambleText">Featured Art</h2>
+                <div class="pr-12">
+                    <p class="text-base opacity-80 mb-4">
+                        過去のアーティスト活動におけるハイライト作品をご紹介します。クリックして詳細をご覧いただけます。
+                    </p>
+                    <p class="text-base opacity-80">
+                        テクノロジーとアートの融合を目指して制作された各作品は、インタラクティブな要素を含んでいます。
+                        スクロールしながらコレクションをお楽しみください。
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content Area (Right Panel) -->
+        <div class="md:col-span-3 col-span-4 flex flex-col md:gap-[14rem] gap-24 featured-projects">
+            <!-- Project 1 -->
+            <section class="w-full flex flex-col project-slide projectButton">
+                <a href="#" class="block w-full md:mb-8 mb-4 overflow-hidden">
+                    <div class="w-full md:aspect-[84.375/50] aspect-square relative project-image-container">
+                        <img src="../texture/1.png" alt="Digital Nature" class="w-full h-full object-cover">
+                        <div class="absolute top-0 left-0 w-full h-full project-overlay"></div>
+                    </div>
+                </a>
+                <div class="flex flex-col md:gap-1">
+                    <h3 class="md:text-2xl text-xl font-medium scrambleText">Digital Nature</h3>
+                    <p class="md:text-lg text-base opacity-70 scrambleText">自然とテクノロジーの融合を表現したデジタルアート</p>
+                </div>
+            </section>
+            
+            <!-- Project 2 -->
+            <section class="w-full flex flex-col project-slide projectButton">
+                <a href="#" class="block w-full md:mb-8 mb-4 overflow-hidden">
+                    <div class="w-full md:aspect-[84.375/50] aspect-square relative project-image-container">
+                        <img src="../texture/3.png" alt="Cyber Landscape" class="w-full h-full object-cover">
+                        <div class="absolute top-0 left-0 w-full h-full project-overlay"></div>
+                    </div>
+                </a>
+                <div class="flex flex-col md:gap-1">
+                    <h3 class="md:text-2xl text-xl font-medium scrambleText">Cyber Landscape</h3>
+                    <p class="md:text-lg text-base opacity-70 scrambleText">デジタル空間における新たな風景の創造</p>
+                </div>
+            </section>
+            
+            <!-- Project 3 -->
+            <section class="w-full flex flex-col project-slide projectButton">
+                <a href="#" class="block w-full md:mb-8 mb-4 overflow-hidden">
+                    <div class="w-full md:aspect-[84.375/50] aspect-square relative project-image-container">
+                        <img src="../texture/circle_mofvji.webp" alt="Geometric Harmony" class="w-full h-full object-cover">
+                        <div class="absolute top-0 left-0 w-full h-full project-overlay"></div>
+                    </div>
+                </a>
+                <div class="flex flex-col md:gap-1">
+                    <h3 class="md:text-2xl text-xl font-medium scrambleText">Geometric Harmony</h3>
+                    <p class="md:text-lg text-base opacity-70 scrambleText">幾何学的形状と調和の探求</p>
+                </div>
+            </section>
+            
+            <!-- Project 4 -->
+            <section class="w-full flex flex-col project-slide projectButton">
+                <a href="#" class="block w-full md:mb-8 mb-4 overflow-hidden">
+                    <div class="w-full md:aspect-[84.375/50] aspect-square relative project-image-container">
+                        <img src="../texture/1.png" alt="Future Abstraction" class="w-full h-full object-cover">
+                        <div class="absolute top-0 left-0 w-full h-full project-overlay"></div>
+                    </div>
+                </a>
+                <div class="flex flex-col md:gap-1">
+                    <h3 class="md:text-2xl text-xl font-medium scrambleText">Future Abstraction</h3>
+                    <p class="md:text-lg text-base opacity-70 scrambleText">未来のビジョンを抽象的に表現した作品</p>
+                </div>
+            </section>
+            
+            <!-- Project 5 -->
+            <section class="w-full flex flex-col project-slide projectButton">
+                <a href="#" class="block w-full md:mb-8 mb-4 overflow-hidden">
+                    <div class="w-full md:aspect-[84.375/50] aspect-square relative project-image-container">
+                        <img src="../texture/3.png" alt="Organic Tech" class="w-full h-full object-cover">
+                        <div class="absolute top-0 left-0 w-full h-full project-overlay"></div>
+                    </div>
+                </a>
+                <div class="flex flex-col md:gap-1">
+                    <h3 class="md:text-2xl text-xl font-medium scrambleText">Organic Tech</h3>
+                    <p class="md:text-lg text-base opacity-70 scrambleText">有機的な形状とテクノロジーの融合</p>
+                </div>
+            </section>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="content-section" id="contact" data-section="Contact">
+        <div class="parallax-layer" data-speed="0.3"></div>
+        <div class="section-content">
+            <div class="content-left">
+                <div class="image-container">
+                    <img src="../texture/circle_mofvji.webp" alt="Contact" class="section-image">
+                </div>
+            </div>
+            <div class="content-right">
+                <h2>Let's Create Something Amazing</h2>
+                <p>I'm always excited to work on new projects and collaborate with creative minds. Whether you have a specific vision or just an idea, let's discuss how we can bring it to life.</p>
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <span class="contact-label">Email:</span>
+                        <span class="contact-value">hello@example.com</span>
+                    </div>
+                    <div class="contact-item">
+                        <span class="contact-label">Location:</span>
+                        <span class="contact-value">Tokyo, Japan</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="color-inversion-zone"></div>
+    </section>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

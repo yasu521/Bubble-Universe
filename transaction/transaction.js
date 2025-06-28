@@ -43,10 +43,10 @@ class TransactionAnimation {
         this.zPositions = Array.from({ length: this.donutCount }, (_, i) => 7 + (i * 0.2));
         
         // 終了位置Z（個別に設定可能）
-        this.targetZ = Array.from({ length: this.donutCount }, (_, i) => 5 - (i * 0.5));
+        this.targetZ = Array.from({ length: this.donutCount }, (_, i) => 5 - (i * 0.7));
         
         // リセット位置Z（個別に設定）
-        this.resetZ = Array.from({ length: this.donutCount }, (_, i) =>5 - (i * 0.5));
+        this.resetZ = Array.from({ length: this.donutCount }, (_, i) =>5 - (i * 0.7));
         
         // 文字表示パラメータ
         this.textMesh = null;
@@ -254,69 +254,57 @@ class TransactionAnimation {
         }
     }
     
-    createTextMesh() {
-        try {
-            console.log('テキストメッシュの作成を開始');
-            
-            // フォントのチェック
-            if (!this.font) {
-                console.warn('フォントがロードされていないため、テキストメッシュを作成できません');
-                return;
+            createTextMesh() {
+                try {
+                    // テキストジオメトリの作成
+                    let textGeometry;
+                    
+                    // THREE.TextGeometryまたはTextGeometryのどちらかを使用
+                    if (typeof TextGeometry !== 'undefined') {
+                        textGeometry = new TextGeometry(this.textContent, {
+                            font: this.font,
+                            size: this.textSize,
+                            height: 0.1,
+                            curveSegments: 12,
+                            bevelEnabled: false
+                        });
+                    } else if (typeof THREE.TextGeometry !== 'undefined') {
+                        textGeometry = new THREE.TextGeometry(this.textContent, {
+                            font: this.font,
+                            size: this.textSize,
+                            height: 0.1,
+                            curveSegments: 12,
+                            bevelEnabled: false
+                        });
+                    } else {
+                        console.error('TextGeometryが見つかりません');
+                        return;
+                    }
+                    
+                    // テキストを中央に配置
+                    textGeometry.computeBoundingBox();
+                    const textWidth = textGeometry.boundingBox.max.x - textGeometry.boundingBox.min.x;
+                    
+                    // テキストマテリアル
+                    const textMaterial = new THREE.MeshBasicMaterial({
+                        color: 0x4ecdc4,
+                        transparent: true,
+                        opacity: 0
+                    });
+                    
+                    this.textMesh = new THREE.Mesh(textGeometry, textMaterial);
+                    this.textMesh.position.set(
+                        this.textPosition.x - textWidth / 2,
+                        this.textPosition.y,
+                        this.textPosition.z
+                    );
+                    
+                    this.scene.add(this.textMesh);
+                    console.log('テキストメッシュを作成しました:', this.textContent);
+                } catch (error) {
+                    console.error('テキストメッシュの作成中にエラーが発生しました:', error);
+                }
             }
-            
-            // TextGeometryの存在確認
-            let TextGeometryConstructor;
-            if (typeof THREE.TextGeometry !== 'undefined') {
-                console.log('THREE.TextGeometryを使用');
-                TextGeometryConstructor = THREE.TextGeometry;
-            } else if (typeof THREE.examples !== 'undefined' && THREE.examples.jsm && THREE.examples.jsm.geometries && THREE.examples.jsm.geometries.TextGeometry) {
-                console.log('THREE.examples.jsm.geometries.TextGeometryを使用');
-                TextGeometryConstructor = THREE.examples.jsm.geometries.TextGeometry;
-            } else if (typeof TextGeometry !== 'undefined') {
-                console.log('グローバルTextGeometryを使用');
-                TextGeometryConstructor = TextGeometry;
-            } else {
-                console.error('TextGeometryが見つかりません。CDN URLを確認してください');
-                return;
-            }
-            
-            // テキストジオメトリの作成
-            console.log('テキストジオメトリを作成中');
-            const textGeometry = new TextGeometryConstructor(this.textContent, {
-                font: this.font,
-                size: this.textSize,
-                height: 0.05,
-                curveSegments: 4,
-                bevelEnabled: false
-            });
-            
-            // テキストの中央揃え
-            textGeometry.computeBoundingBox();
-            const textWidth = textGeometry.boundingBox.max.x - textGeometry.boundingBox.min.x;
-            const textHeight = textGeometry.boundingBox.max.y - textGeometry.boundingBox.min.y;
-            textGeometry.translate(-textWidth / 2, -textHeight / 2, 0);
-            
-            // テキストマテリアルの作成
-            const textMaterial = new THREE.MeshBasicMaterial({
-                color: 0xffffff,
-                transparent: true,
-                opacity: 0
-            });
-            
-            // テキストメッシュの作成
-            this.textMesh = new THREE.Mesh(textGeometry, textMaterial);
-            this.textMesh.position.set(
-                this.textPosition.x,
-                this.textPosition.y,
-                this.textPosition.z
-            );
-            
-            this.scene.add(this.textMesh);
-            console.log('テキストメッシュを作成しました');
-        } catch (error) {
-            console.error('テキストメッシュの作成に失敗しました:', error);
-        }
-    }
     
     // フォントのロード
     async loadFont() {
