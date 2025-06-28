@@ -204,11 +204,21 @@ class NaturalAboutMeWebsite {
 
         // カードの初期z-indexを保存
         const zIndexStore = {};
+        const cards = gsap.utils.toArray('.solution-card');
+        const totalCards = cards.length;
+        
+        // スタック用のコンテナを作成
+        const stackContainer = document.createElement('div');
+        stackContainer.className = 'solution-cards-stack-container';
+        const firstCard = cards[0];
+        firstCard.parentNode.insertBefore(stackContainer, firstCard);
+        
+        // カードを全体的に扱うためのマスタータイムライン
+        const masterTimeline = gsap.timeline();
         
         // 各カードのアニメーション
-        gsap.utils.toArray('.solution-card').forEach((card, index) => {
+        cards.forEach((card, index) => {
             // カードの初期スタイル設定 - z-indexを逆転させる (1枚目が一番下、5枚目が一番上)
-            const totalCards = document.querySelectorAll('.solution-card').length;
             const zIndex = index + 1; // 1枚目は1、5枚目は5になる
             
             gsap.set(card, { 
@@ -275,61 +285,178 @@ class NaturalAboutMeWebsite {
                     duration: 0.5,
                     ease: 'power2.out'
                 }, '-=0.1');
-            
-            // スタッキング効果と「めくり」演出のためのz-index操作
-            if (index < 4) { // 最後のカードはスタッキングしない
-                // 固定位置の調整 - 各カードが中央で停止するように
-                ScrollTrigger.create({
-                    trigger: card,
-                    start: 'top center-=200', // さらに上に停止位置を調整
-                    end: 'bottom top-=250',  // 終了位置も上に調整
-                    pin: true,
-                    pinSpacing: false,
-                    // markers: true, // デバッグ用
-                    id: `card-pin-${index}`,
-                    onEnterBack: () => {
-                        // カードが再び表示される時、z-indexを元に戻す
-                        gsap.to(card, {
-                            zIndex: zIndexStore[index],
-                            duration: 0.1
-                        });
-                    },
-                    onLeave: () => {
-                        // カードが上に移動して次のカードが見えるようになる時、z-indexを変更しない
-                        // 元々設定した z-index 順序を維持する
-                        
-                        // テキストを再び薄く
-                        gsap.to([card.querySelector('.card-header'), card.querySelector('.card-description')], {
-                            opacity: 0.3,
-                            color: '#aaa',
-                            duration: 0.3
-                        });
-                    }
-                });
-                
-                // 読み上げ効果のタイムライン（文字の濃淡変化）
-                const readabilityTimeline = gsap.timeline({
-                    scrollTrigger: {
-                        trigger: card,
-                        start: 'top bottom-=200', // より早く読み上げ効果を開始
-                        end: 'center center-=150', // より早く読み上げ効果を完了
-                        scrub: true
-                    }
-                });
-                
-                readabilityTimeline
-                    .fromTo([cardHeader, cardDescription], {
-                        opacity: 0.3,
-                        color: '#aaa'
-                    }, {
+        });
+        
+        // 新しいスタッキングシステム
+        // 各カードのピン設定
+        cards.forEach((card, index) => {
+            // 各カードの位置を固定するためのスクロールトリガー
+            const cardPin = ScrollTrigger.create({
+                trigger: card,
+                start: 'top center-=150', // カードが画面中央より少し上に来た時に固定開始
+                endTrigger: index < totalCards - 1 ? cards[index + 1] : '.solution-cards-section', // 次のカードが表示されるまで固定
+                end: index < totalCards - 1 ? 'top center-=100' : 'bottom bottom', // 次のカードがピン位置に来たら固定解除
+                pin: true,
+                pinSpacing: false,
+                id: `card-pin-${index}`,
+                // markers: true, // デバッグ用
+                onEnter: () => {
+                    console.log(`Card ${index} pinned`);
+                    
+                    // カードが画面に入った時のアニメーション
+                    gsap.to(card, {
+                        zIndex: zIndexStore[index],
+                        duration: 0.1
+                    });
+                    
+                    // カードのコンテンツを明るく表示
+                    gsap.to([card.querySelector('.card-header'), card.querySelector('.card-description')], {
                         opacity: 1,
                         color: '#000',
-                        duration: 0.5,
-                        ease: 'power1.inOut'
+                        duration: 0.3
                     });
+                    
+                    // スタック状態のクラスを追加
+                    card.classList.add('stacked');
+                    
+                    // 既にスタックされたカードをさらに背後に
+                    for (let i = 0; i < index; i++) {
+                        gsap.to(cards[i], {
+                            y: 5 * (index - i), // 前のカードを少し下げる
+                            duration: 0.3,
+                            ease: 'power1.out'
+                        });
+                    }
+                },
+                onLeave: () => {
+                    // カードが画面から出る時、次のカードが現れるので
+                    // カードが背後に移動するように見せる
+                    console.log(`Card ${index} leaving`);
+                    
+                    // テキストを再び薄く
+                    gsap.to([card.querySelector('.card-header'), card.querySelector('.card-description')], {
+                        opacity: 0.3,
+                        color: '#aaa',
+                        duration: 0.3
+                    });
+                    
+                    // カードが次に移動するときのアニメーション
+                    if (index < totalCards - 1) {
+                        card.classList.add('scrolling-up');
+                    }
+                },
+                onEnterBack: () => {
+                    // スクロールを戻った時、カードを再表示
+                    console.log(`Card ${index} entering back`);
+                    
+                    // z-indexを元に戻す
+                    gsap.to(card, {
+                        zIndex: zIndexStore[index],
+                        duration: 0.1
+                    });
+                    
+                    // カードのコンテンツを明るく表示
+                    gsap.to([card.querySelector('.card-header'), card.querySelector('.card-description')], {
+                        opacity: 1,
+                        color: '#000',
+                        duration: 0.3
+                    });
+                    
+                    // スクロールアップ状態を解除
+                    card.classList.remove('scrolling-up');
+                },
+                onLeaveBack: () => {
+                    console.log(`Card ${index} leaving back`);
+                    // スタック状態を解除
+                    card.classList.remove('stacked');
+                    
+                    // 前のカードの位置を元に戻す
+                    for (let i = 0; i < index; i++) {
+                        gsap.to(cards[i], {
+                            y: 0,
+                            duration: 0.3,
+                            ease: 'power1.out'
+                        });
+                    }
+                }
+            });
+        });
+        
+        // 全カードが揃った後、一緒にスクロールする処理
+        // 最後のカードが表示された後のアニメーション
+        const finalCardTrigger = ScrollTrigger.create({
+            trigger: cards[totalCards - 1],
+            start: 'center center-=100',
+            end: 'bottom top',
+            // markers: true, // デバッグ用
+            id: 'final-card-trigger',
+            onEnter: () => {
+                console.log('All cards stacked, now scrolling together');
+                
+                // 少し待ってから全カードを一緒にスクロールさせる
+                setTimeout(() => {
+                    // 全てのカードを含むグループとして扱う
+                    cards.forEach(card => {
+                        card.classList.add('stack-group');
+                    });
+                    
+                    // 一緒にスクロールアップするためのアニメーション
+                    // 全てのカードのピン設定を調整
+                    ScrollTrigger.getAll().forEach(trigger => {
+                        if (trigger.vars.id && trigger.vars.id.startsWith('card-pin-')) {
+                            // ピン設定を無効化する前に、カードの位置を記録
+                            const cardIndex = parseInt(trigger.vars.id.split('-')[2]);
+                            const cardElement = cards[cardIndex];
+                            
+                            // カードの現在の位置を固定
+                            const rect = cardElement.getBoundingClientRect();
+                            gsap.set(cardElement, {
+                                position: 'absolute',
+                                top: `${window.scrollY + rect.top}px`,
+                                left: `${rect.left}px`,
+                                width: `${rect.width}px`,
+                                height: `${rect.height}px`,
+                                zIndex: zIndexStore[cardIndex]
+                            });
+                            
+                            // ピン設定を無効化
+                            trigger.disable();
+                        }
+                    });
+                    
+                    // 全てのカードをグループとして扱い、一緒に上にスクロールする効果
+                    gsap.to(cards, {
+                        y: (index) => -50 - (index * 5), // 上に少しスクロール、カードごとに少しずつ距離を変える
+                        stagger: 0.05, // 少しずつ遅れて移動
+                        duration: 0.5,
+                        ease: 'power1.out',
+                        scrollTrigger: {
+                            trigger: cards[totalCards - 1],
+                            start: 'center center-=100',
+                            end: 'bottom top-=200',
+                            scrub: 0.5,
+                            // markers: true, // デバッグ用
+                            id: 'group-scroll-trigger',
+                            onLeave: () => {
+                                // スクロールが終わったら、カードのスタイルを元に戻す
+                                cards.forEach(card => {
+                                    card.classList.add('scrolling-up');
+                                });
+                            },
+                            onEnterBack: () => {
+                                // スクロールを戻ったら、カードのスタイルを再設定
+                                cards.forEach(card => {
+                                    card.classList.remove('scrolling-up');
+                                });
+                            }
+                        }
+                    });
+                }, 300); // 少し遅延させて実行
             }
-            
-            // 「詳細を見る」リンクのクリックイベント
+        });
+        
+        // 「詳細を見る」リンクのクリックイベント設定
+        cards.forEach((card) => {
             const detailLink = card.querySelector('.card-link a');
             if (detailLink) {
                 detailLink.addEventListener('click', (e) => {

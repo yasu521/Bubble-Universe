@@ -653,6 +653,7 @@ body {
     z-index: 2;
     left: 0;
     right: 0;
+    will-change: transform, opacity;
 }
 
 /* 1枚目のカードをセクションいっぱいに広げる */
@@ -1102,4 +1103,71 @@ body {
     max-width: 1200px;
     margin-left: auto;
     margin-right: auto;
+}
+
+/* スタッキングコンテナのスタイル */
+.solution-cards-stack-container {
+    position: relative;
+    width: 100%;
+    height: auto;
+    margin: 0 auto;
+    z-index: 5;
+}
+
+/* カードがスタックされた時のスタイル */
+.solution-card.stacked {
+    position: relative;
+    transition: transform 0.5s ease-out, opacity 0.5s ease-out;
+}
+
+/* カードがスクロールして上に移動する時のスタイル */
+.solution-card.scrolling-up {
+    transform: translateY(-20vh);
+    transition: transform 0.8s ease-out;
+}
+
+/* スタックされたカード群が一緒にスクロールする時のスタイル */
+.stack-group-scrolling {
+    transform: translateY(-30vh);
+    transition: transform 1s ease-out;
+}
+
+/* カードスタック効果の強化 */
+.solution-card {
+    transform-origin: center top; /* 変形の起点を上部中央に */
+    backface-visibility: hidden; /* より滑らかな3D効果のために */
+    perspective: 1000px; /* 3D効果の強度 */
+    transform-style: preserve-3d; /* 3D空間での変形を維持 */
+    will-change: transform, opacity, z-index; /* パフォーマンス最適化 */
+}
+
+/* スタックグループのスタイル */
+.stack-group {
+    transition: transform 0.8s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.8s ease;
+}
+
+/* カードが重なるときの3D効果 */
+.solution-card.stacked {
+    box-shadow: 0 5px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* 各カードの重なり具合を調整 */
+.solution-card:nth-child(1).stacked {
+    transform: translateZ(0px) scale(1);
+}
+
+.solution-card:nth-child(2).stacked {
+    transform: translateZ(5px) scale(1);
+}
+
+.solution-card:nth-child(3).stacked {
+    transform: translateZ(10px) scale(1);
+}
+
+.solution-card:nth-child(4).stacked {
+    transform: translateZ(15px) scale(1);
+}
+
+.solution-card:nth-child(5).stacked {
+    transform: translateZ(20px) scale(1);
 }
