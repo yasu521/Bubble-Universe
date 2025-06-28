@@ -341,22 +341,22 @@
                 this.animationComplete = false;
                 
                 // アニメーションパラメータ
-                this.animationDuration = 1.5;  // 各ドーナツのアニメーション時間（秒）
-                this.delayBetweenDonuts = 0.1; // ドーナツ間の遅延時間（秒）を短くして10枚でも全体の長さを調整
+                this.animationDuration = 1.0;  // 各ドーナツのアニメーション時間（秒）
+                this.delayBetweenDonuts = 0.05; // ドーナツ間の遅延時間（秒）を短くして10枚でも全体の長さを調整
                 this.finalDelay = 0.5;         // 最終段階後の遅延時間（秒）
                 
                 // 10枚のドーナツ用の配列を準備 - オリジナルと同じ
-                this.donutCount = 10; // ドーナツの枚数
+                this.donutCount = 13; // ドーナツの枚数
                 this.rotationAngle = 15; // 各ドーナツの回転角度（度）
                 
                 // 初期Z位置（深さ方向に少しずつずらす）- オリジナルと同じ
                 this.zPositions = Array.from({ length: this.donutCount }, (_, i) => 7 + (i * 0.2));
                 
                 // 終了位置Z（個別に設定可能）- オリジナルと同じ
-                this.targetZ = Array.from({ length: this.donutCount }, (_, i) => 5 - (i * 0.7));
+                this.targetZ = Array.from({ length: this.donutCount }, (_, i) => 5 - (i * 0.6));
                 
                 // リセット位置Z（個別に設定）- オリジナルと同じ
-                this.resetZ = Array.from({ length: this.donutCount }, (_, i) => 5 - (i * 0.7));
+                this.resetZ = Array.from({ length: this.donutCount }, (_, i) => 5 - (i * 0.6));
                 
                 // 文字表示パラメータ
                 this.textMesh = null;
@@ -370,7 +370,7 @@
                 // 逆アニメーションパラメータ
                 this.reverseAnimationActive = false;
                 this.reverseAnimationDuration = 2.0; // 逆アニメーションの時間
-                this.fadeOutDuration = 1.0; // フェードアウトの時間
+                this.fadeOutDuration = 0; // フェードアウトの時間
                 
                 // 時間管理
                 this.clock = new THREE.Clock();
