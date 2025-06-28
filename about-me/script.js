@@ -171,6 +171,128 @@ class NaturalAboutMeWebsite {
             }
         });
     }
+                initializeSolutionCards() {
+                const t = document.querySelector(".index__solutioncards");
+                if (!t)
+                    return;
+                const e = t.querySelector(".index__solutioncards__startingpoint")
+                  , r = t.querySelector(".index__solutioncards__startingpoint__bg")
+                  , n = t.querySelector(".index__solutioncards__startingpoint__bg video")
+                  , i = (t.querySelector(".index__solutioncards__startingpoint__body"),
+                t.querySelector(".index__solutioncards__body__title"))
+                  , o = t.querySelector(".index__solutioncards__startingpoint__body__main")
+                  , s = e.querySelectorAll(".textline")
+                  , a = new al(s)
+                  , l = t.querySelector(".index__solutioncards__main")
+                  , c = l.querySelector(".index__solutioncards__container")
+                  , u = l.querySelectorAll(".index__solutioncards__main__card")
+                  , d = Array.from(u).map((t => t.querySelector(".index__solutioncards__main__card__bg img")))
+                  , f = Array.from(u).map((t => new al(t.querySelectorAll(".textline"))));
+                gsap.fromTo(n, {
+                    yPercent: -20
+                }, {
+                    yPercent: 0,
+                    ease: "none",
+                    scrollTrigger: {
+                        trigger: e,
+                        start: () => "top bottom",
+                        end: () => "top+=" + window.lvh + " bottom",
+                        scrub: !0,
+                        invalidateOnRefresh: !0
+                    }
+                }),
+                gsap.fromTo(n, {
+                    yPercent: 0
+                }, {
+                    yPercent: 20,
+                    ease: "none",
+                    scrollTrigger: {
+                        trigger: t,
+                        start: () => "bottom bottom",
+                        end: () => "bottom+=" + window.lvh + " bottom",
+                        scrub: !0,
+                        invalidateOnRefresh: !0
+                    }
+                }),
+                ScrollTrigger.create({
+                    trigger: r,
+                    start: "top top",
+                    endTrigger: t,
+                    end: "bottom bottom",
+                    pin: !0,
+                    pinSpacing: !1,
+                    onEnter: () => {}
+                    ,
+                    onEnterBack: () => {}
+                    ,
+                    onLeave: () => {}
+                    ,
+                    onLeaveBack: () => {}
+                    ,
+                    onUpdate: t => {}
+                }),
+                ScrollTrigger.create({
+                    trigger: o,
+                    start: () => "top-=" + ("pc" == window.currentContext ? rpx(84) : rpx(30)) + " top",
+                    endTrigger: t,
+                    end: "bottom bottom",
+                    pin: !0,
+                    pinSpacing: !1
+                }),
+                ScrollTrigger.create({
+                    trigger: e,
+                    start: "top-=" + window.lvh / 2 + " top",
+                    end: () => "top top",
+                    onUpdate: t => {
+                        e.style.setProperty("--startingpoint-progress", 1 - t.progress)
+                    }
+                }),
+                ScrollTrigger.create({
+                    trigger: e,
+                    start: "top-=" + window.lvh / 2 + " top",
+                    end: () => "top top",
+                    onUpdate: t => {
+                        a.textProgress(t.progress)
+                    }
+                }),
+                ScrollTrigger.create({
+                    trigger: e,
+                    start: () => "top-=" + window.lvh / 2 + " top",
+                    end: () => "top top",
+                    onUpdate: t => {
+                        i.style.opacity = 1 - t.progress
+                    }
+                }),
+                ScrollTrigger.create({
+                    trigger: c,
+                    start: "top top",
+                    endTrigger: l,
+                    end: "bottom bottom",
+                    pin: !0,
+                    pinSpacing: !1
+                }),
+                ScrollTrigger.create({
+                    trigger: l,
+                    start: "top top",
+                    end: "bottom bottom",
+                    onUpdate: t => {
+                        const e = 8 * t.progress;
+                        l.style.setProperty("--main-progress", 1 - t.progress),
+                        window.vw / window.lvh > 1 ? f.forEach(( (t, r) => {
+                            2 * r + 1 > e ? t.textProgress(0) : 2 * r + 1 <= e && 2 * r + 2 > e ? t.textProgress(e - (2 * r + 1)) : 2 * r + 2 <= e && t.textProgress(1)
+                        }
+                        )) : f.forEach(( (t, r) => {
+                            2 * r > e ? t.textProgress(0) : 2 * r <= e && 2 * r + 2 > e ? t.textProgress((e - (2 * r + .7)) / 1.3) : 2 * r + 2 <= e && t.textProgress(1)
+                        }
+                        ));
+                        const r = 4 * t.progress;
+                        d.forEach(( (t, e) => {
+                            const n = Math.min(2, Math.max(0, r - e));
+                            n <= 1 ? t.style.transform = "translateY(" + -20 * (1 - n) + "%)" : 1 < n && (t.style.transform = "translateY(" + 40 * (1 - n) + "%)")
+                        }
+                        ))
+                    }
+                });
 
     setupSolutionCardsSection() {
         // GSAPとScrollTriggerが読み込まれているか確認
