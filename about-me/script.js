@@ -11,6 +11,7 @@ class NaturalAboutMeWebsite {
         this.setupGallery();
         this.setupSolutionCardsSection();
         this.setupFeaturedArtSection();
+        this.setupInvertedSections();
     }
 
     init() {
@@ -201,14 +202,24 @@ class NaturalAboutMeWebsite {
                 ease: 'power2.out'
             });
 
+        // カードの初期z-indexを保存
+        const zIndexStore = {};
+        
         // 各カードのアニメーション
         gsap.utils.toArray('.solution-card').forEach((card, index) => {
-            // カードの初期スタイル設定
+            // カードの初期スタイル設定 - z-indexを逆転させる (1枚目が一番下、5枚目が一番上)
+            const totalCards = document.querySelectorAll('.solution-card').length;
+            const zIndex = index + 1; // 1枚目は1、5枚目は5になる
+            
             gsap.set(card, { 
                 opacity: 0, 
-                y: 50,
-                zIndex: 10 - index // スタッキング順序
+                y: 100,  // より下から上昇させる
+                scale: 0.8,  // 初期サイズを小さく
+                zIndex: zIndex // 1枚目が一番低く、5枚目が一番高い
             });
+            
+            // z-indexを保存
+            zIndexStore[index] = zIndex;
             
             // カード内のコンテンツ要素
             const cardHeader = card.querySelector('.card-header');
@@ -216,68 +227,135 @@ class NaturalAboutMeWebsite {
             const cardImage = card.querySelector('.card-image');
             const cardLink = card.querySelector('.card-link');
             
-            // 内部コンテンツの初期スタイル設定
-            gsap.set([cardHeader, cardDescription, cardImage, cardLink], { 
+            // 内部コンテンツの初期スタイル設定 - 初期状態では薄く表示
+            gsap.set([cardHeader, cardDescription], { 
+                opacity: 0.3, 
+                y: 20,
+                color: '#aaa'  // 薄い色で初期化
+            });
+            
+            gsap.set([cardImage, cardLink], { 
                 opacity: 0, 
                 y: 20 
             });
             
-            // カードごとのタイムライン
-            const cardTimeline = gsap.timeline({
+            // カードごとのタイムライン - 登場アニメーション
+            const cardEnterTimeline = gsap.timeline({
                 scrollTrigger: {
                     trigger: card,
-                    start: 'top bottom-=100',
-                    end: 'top center-=100',
-                    scrub: 0.4,
+                    start: 'top bottom-=100', // より早く登場アニメーションを開始
+                    end: 'center center-=150', // より早く登場アニメーションを完了
+                    scrub: 0.6,
                     // markers: true, // デバッグ用
+                    onEnter: () => {
+                        console.log(`Card ${index} entering view`);
+                    }
                 }
             });
             
-            // スタッキング効果のための固定位置（前のカードの一部が見える位置）
-            const pinSpacePercentage = 18 * (index); // 各カードは前のカードより少し下に固定
-            
-            // カード本体のアニメーション
-            cardTimeline
+            // カード本体の登場アニメーション
+            cardEnterTimeline
                 .to(card, {
                     opacity: 1,
                     y: 0,
-                    duration: 0.3,
+                    scale: 1,  // 実寸大に拡大
+                    duration: 1,
                     ease: 'power2.out'
                 })
-                .to(cardHeader, {
+                .to([cardHeader, cardDescription], {
                     opacity: 1,
                     y: 0,
+                    color: '#000',  // 濃い色に変化
                     duration: 0.3,
                     ease: 'power2.out'
                 }, '-=0.2')
-                .to(cardDescription, {
+                .to([cardImage, cardLink], {
                     opacity: 1,
                     y: 0,
-                    duration: 0.3,
-                    ease: 'power2.out'
-                }, '-=0.1')
-                .to(cardImage, {
-                    opacity: 1,
-                    y: 0,
-                    duration: 0.3,
-                    ease: 'power2.out'
-                }, '-=0.1')
-                .to(cardLink, {
-                    opacity: 1,
-                    y: 0,
-                    duration: 0.3,
+                    duration: 0.5,
                     ease: 'power2.out'
                 }, '-=0.1');
             
-            // カードのスタッキング効果（前のカードを部分的に見せる）
+            // スタッキング効果と「めくり」演出のためのz-index操作
             if (index < 4) { // 最後のカードはスタッキングしない
+                // 固定位置の調整 - 各カードが中央で停止するように
                 ScrollTrigger.create({
                     trigger: card,
-                    start: `top+=${pinSpacePercentage}% center`,
-                    end: 'bottom top',
+                    start: 'top center-=200', // さらに上に停止位置を調整
+                    end: 'bottom top-=250',  // 終了位置も上に調整
                     pin: true,
                     pinSpacing: false,
                     // markers: true, // デバッグ用
+                    id: `card-pin-${index}`,
+                    onEnterBack: () => {
+                        // カードが再び表示される時、z-indexを元に戻す
+                        gsap.to(card, {
+                            zIndex: zIndexStore[index],
+                            duration: 0.1
+                        });
+                    },
+                    onLeave: () => {
+                        // カードが上に移動して次のカードが見えるようになる時、z-indexを変更しない
+                        // 元々設定した z-index 順序を維持する
+                        
+                        // テキストを再び薄く
+                        gsap.to([card.querySelector('.card-header'), card.querySelector('.card-description')], {
+                            opacity: 0.3,
+                            color: '#aaa',
+                            duration: 0.3
+                        });
+                    }
+                });
+                
+                // 読み上げ効果のタイムライン（文字の濃淡変化）
+                const readabilityTimeline = gsap.timeline({
+                    scrollTrigger: {
+                        trigger: card,
+                        start: 'top bottom-=200', // より早く読み上げ効果を開始
+                        end: 'center center-=150', // より早く読み上げ効果を完了
+                        scrub: true
+                    }
+                });
+                
+                readabilityTimeline
+                    .fromTo([cardHeader, cardDescription], {
+                        opacity: 0.3,
+                        color: '#aaa'
+                    }, {
+                        opacity: 1,
+                        color: '#000',
+                        duration: 0.5,
+                        ease: 'power1.inOut'
+                    });
+            }
+            
+            // 「詳細を見る」リンクのクリックイベント
+            const detailLink = card.querySelector('.card-link a');
+            if (detailLink) {
+                detailLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const targetId = detailLink.getAttribute('href');
+                    const targetElement = document.querySelector(targetId);
+                    
+                    if (targetElement) {
+                        // ScrollTriggerのpinnedな要素がある場合に備えて
+                        ScrollTrigger.getAll().forEach(trigger => {
+                            if (trigger.pin) {
+                                trigger.disable();
+                                setTimeout(() => trigger.enable(), 1500);
+                            }
+                        });
+                        
+                        // スムーズスクロール
+                        gsap.to(window, {
+                            duration: 1,
+                            scrollTo: {
+                                y: targetElement,
+                                offsetY: 80
+                            },
+                            ease: 'power2.inOut'
+                        });
+                    }
                 });
             }
         });
@@ -296,6 +374,90 @@ class NaturalAboutMeWebsite {
         }, {
             backgroundPosition: '100% 100%',
             ease: 'none'
+        });
+    }
+
+    setupInvertedSections() {
+        // GSAPとScrollTriggerが読み込まれているか確認
+        if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') {
+            console.error('GSAP or ScrollTrigger is not loaded');
+            return;
+        }
+
+        console.log('Setting up Inverted Sections');
+
+        // 反転セクションごとにアニメーションを設定
+        gsap.utils.toArray('.inverted-section').forEach((section, index) => {
+            const sectionId = `inverted-section-${index}`;
+            section.setAttribute('data-section-id', sectionId);
+            
+            // 反転効果のためのタイムライン
+            const invertTimeline = gsap.timeline({
+                scrollTrigger: {
+                    trigger: section,
+                    start: 'top 60%',
+                    end: 'bottom 40%',
+                    toggleActions: 'play reverse play reverse',
+                    // markers: true, // デバッグ用
+                    id: sectionId,
+                    onEnter: () => {
+                        console.log(`Entering inverted section ${sectionId}`);
+                    },
+                    onLeave: () => {
+                        console.log(`Leaving inverted section ${sectionId}`);
+                    }
+                },
+                onComplete: () => {
+                    console.log(`Inversion complete for ${sectionId}`);
+                }
+            });
+            
+            // サイト全体の色を反転する
+            invertTimeline
+                .to('body', {
+                    backgroundColor: '#000',
+                    color: '#fff',
+                    duration: 0.5,
+                    ease: 'power2.inOut'
+                })
+                .to('.header', {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    color: '#fff',
+                    duration: 0.5,
+                    ease: 'power2.inOut'
+                }, '-=0.5')
+                .to('.nav-item a', {
+                    color: '#fff',
+                    duration: 0.5,
+                    ease: 'power2.inOut'
+                }, '-=0.5')
+                .to('.logo', {
+                    filter: 'invert(1)',
+                    duration: 0.5,
+                    ease: 'power2.inOut'
+                }, '-=0.5')
+                .to('.social-links a', {
+                    color: '#fff',
+                    duration: 0.5,
+                    ease: 'power2.inOut'
+                }, '-=0.5')
+                .to('.footer', {
+                    backgroundColor: '#111',
+                    color: '#eee',
+                    duration: 0.5,
+                    ease: 'power2.inOut'
+                }, '-=0.5');
+                
+            // セクション内の特定要素に追加のアニメーション
+            const elements = section.querySelectorAll('.animate-on-invert');
+            if (elements.length > 0) {
+                invertTimeline.to(elements, {
+                    scale: 1.05,
+                    filter: 'brightness(1.2)',
+                    duration: 0.6,
+                    ease: 'power1.out'
+                }, '-=0.3');
+            }
         });
     }
 
