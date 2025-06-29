@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Enhanced Bubble Universe</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <!-- デバッグモード用スタイル -->
+  <style>
+    /* レイヤー境界を可視化（デバッグ用） */
+    .debug-mode .bubble-container {
+      border: 1px dashed rgba(255, 0, 0, 0.5);
+    }
+    .debug-mode .scene-container {
+      border: 1px dashed rgba(0, 255, 0, 0.5);
+    }
+    .debug-mode .container {
+      border: 1px dashed rgba(0, 0, 255, 0.5);
+    }
+    .debug-mode .canvas-wrapper {
+      border: 2px solid rgba(255, 255, 0, 0.5);
+    }
+    
+    /* レイヤー情報表示 */
+    .debug-info {
+      position: fixed;
+      bottom: 10px;
+      left: 10px;
+      color: white;
+      background-color: rgba(0, 0, 0, 0.7);
+      padding: 10px;
+      border-radius: 5px;
+      font-size: 12px;
+      z-index: 9999;
+      max-width: 400px;
+      max-height: 200px;
+      overflow: auto;
+    }
+    
+    /* デバッグモード切替ボタン */
+    .debug-toggle {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background-color: rgba(0, 0, 0, 0.7);
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 5px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      z-index: 9999;
+    }
+  </style>
+</head>
+<body>
+  <!-- ウェルカムセクション -->
+  <section id="welcome-section" class="section active-section">
+    <div class="bubble-container" id="welcome-bubble-container"></div>
+    <h1>Bubble Universe</h1>
+    <p>革新的なドーナツ型トランジションエフェクトの世界へようこそ。このデモでは、ユニークな形状のアニメーションを用いたスムーズなトランジションを体験できます。</p>
+    <button id="start-btn" class="btn">エクスペリエンスを開始</button>
+  </section>
+  
+  <!-- アニメーションセクション -->
+  <section id="animation-section" class="section">
+    <div id="canvas-container"></div>
+  </section>
+  
+  <!-- コンテンツセクション（拡張版） -->
+  <section id="content-section" class="section">
+    <!-- ヒーローセクション -->
+    <section id="hero" class="full-screen">
+      <div class="title-overlay">
+        <h1>Enhanced Bubble Universe</h1>
+        <p class="subtitle">没入型バブルアニメーションの世界へようこそ</p>
+      </div>
+      <div class="scene-container" id="content-bubble-container"></div>
+    </section>
+
+    <!-- イントロダクションセクション -->
+    <section id="intro" class="content-section">
+      <div class="container">
+        <h2 class="section-title">はじめに</h2>
+        <div class="intro-content">
+          <p>Enhanced Bubble Universeへようこそ。このプロジェクトは、インタラクティブな3Dアニメーションと没入型のユーザー体験を組み合わせた実験的なWebアプリケーションです。</p>
+          <p>Three.jsを活用した流動的なバブルアニメーションにより、従来のWebサイトの枠を超えた視覚体験を提供します。各バブルの動きは物理演算に基づいており、画面上でリアルタイムに計算されています。</p>
+          <p>スクロールすると、さらなる驚きが待っています。下にスクロールして、さまざまなバブルユニバースを探索してみてください。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 作品紹介セクション -->
+    <section id="showcase" class="content-section">
+      <div class="container">
+        <h2 class="section-title">バブルユニバース展示</h2>
+        <div class="showcase-grid">
+          <div class="canvas-wrapper" data-canvas-id="canvas1">
+            <div class="canvas-description">
+              <h3>スタンダードユニバース</h3>
+              <p>伝統的な物理法則に従う、クラシックなバブル空間。</p>
+            </div>
+          </div>
+          <div class="canvas-wrapper" data-canvas-id="canvas2">
+            <div class="canvas-description">
+              <h3>ゼロ重力ユニバース</h3>
+              <p>重力の影響を受けない、浮遊感あふれるバブル空間。</p>
+            </div>
+          </div>
+          <div class="canvas-wrapper" data-canvas-id="canvas3">
+            <div class="canvas-description">
+              <h3>マルチカラーユニバース</h3>
+              <p>様々な色彩が混ざり合う、幻想的なバブル空間。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- フッター -->
+    <footer>
+      <button id="back-btn" class="btn">ウェルカムページへ戻る</button>
+      <div class="footer-content">
+        <small>© 2025 Enhanced Bubble Universe</small>
+        <div class="social-links">
+          <a href="#" class="social-link">Twitter</a>
+          <a href="#" class="social-link">GitHub</a>
+          <a href="#" class="social-link">Contact</a>
+        </div>
+      </div>
+    </footer>
+  </section>
+  
+  <!-- デバッグ情報表示エリア -->
+  <div id="debug-info" class="debug-info"></div>
+  <button id="debug-toggle" class="debug-toggle">デバッグモード切替</button>
+  
+  <!-- Three.js および関連ライブラリの読み込み -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://unpkg.com/three@0.128.0/examples/js/loaders/FontLoader.js"></script>
+  <script src="https://unpkg.com/three@0.128.0/examples/js/geometries/TextGeometry.js"></script>
+  
+  <!-- アプリケーションスクリプト -->
+  <script src="/js/bubble-scene.js"></script>
+  <script src="/js/transaction-animation.js"></script>
+  <script src="/js/main.js"></script>
+  
+  <!-- デバッグモード用スクリプト -->
+  <script>
+    // デバッグモード切替
+    document.getElementById('debug-toggle').addEventListener('click', function() {
+      document.body.classList.toggle('debug-mode');
+      
+      // デバッグ情報を更新
+      if (document.body.classList.contains('debug-mode')) {
+        updateDebugInfo('デバッグモードを有効化しました');
+        
+        // 要素の情報を表示
+        document.querySelectorAll('.section, .container, .bubble-container, .canvas-wrapper').forEach(el => {
+          const computed = window.getComputedStyle(el);
+          updateDebugInfo(`${el.id || el.className}: z-index=${computed.zIndex}, position=${computed.position}`);
+        });
+      } else {
+        updateDebugInfo('デバッグモードを無効化しました');
+      }
+    });
+  </script>
+</body>
+</html>
