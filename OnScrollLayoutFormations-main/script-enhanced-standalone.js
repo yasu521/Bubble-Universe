@@ -7,7 +7,7 @@ class EnhancedBubbleUniverse {
         this.composer = null;
         
         // タイトル要素の参照を追加
-        this.titleElement = document.getElementById('title');
+        this.titleElement = document.getElementById('bubble-title');
         this.titleMovementFactor = 0.03; // タイトル移動の強さ係数（小さいほど動きが小さくなる）
         this.titleMaxMovement = 20; // タイトル移動の最大距離（ピクセル単位）- 10から15に増加
         // マウス位置を画面中央に初期化（中央を原点として相対座標）
@@ -196,7 +196,7 @@ class EnhancedBubbleUniverse {
     async loadTextures() {
         try {
             this.sphereTextures = [];
-            const textureFiles = ['texture/3.png'];
+            const textureFiles = ['img/texture.png'];
 
             for (const file of textureFiles) {
                 try {

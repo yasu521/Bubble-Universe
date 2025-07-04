@@ -5,6 +5,13 @@ class EnhancedBubbleUniverse {
         this.camera = new THREE.PerspectiveCamera(100, window.innerWidth / window.innerHeight, 0.1, 2000); // FOV 100 degrees
         this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: false, alpha: true }); // Disabled antialias for performance
         this.composer = null;
+        // タイトル要素の参照を追加
+        this.titleElement = document.getElementById('title');
+        this.titleMovementFactor = 0.03; // タイトル移動の強さ係数（小さいほど動きが小さくなる）
+        this.titleMaxMovement = 20; // タイトル移動の最大距離（ピクセル単位）- 10から15に増加
+        // マウス位置を画面中央に初期化（中央を原点として相対座標）
+        this.mouseX = window.innerWidth / 2;
+        this.mouseY = window.innerHeight / 2;
         
         // Raycaster for interaction
         this.raycaster = new THREE.Raycaster();

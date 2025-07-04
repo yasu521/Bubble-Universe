@@ -2,14 +2,17 @@ body {
             margin: 0;
             padding: 0;
             background: #000000;
-            overflow: hidden;
             font-family: Arial, sans-serif;
             color: rgb(0, 0, 0);
         }
         
         canvas {
-            display: block;
-            cursor: crosshair;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            max-width: 200vw;
+            max-height: 50vh;
+
         }
         .blur-overlay {
         position: fixed;

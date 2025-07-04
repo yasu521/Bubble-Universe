@@ -11,6 +11,7 @@
 		<meta name="author" content="Codrops" />
 		<link rel="stylesheet" href="https://use.typekit.net/tas3jji.css">
 		<link rel="stylesheet" type="text/css" href="css/base.css" />
+		
 		<script>document.documentElement.className="js";</script>
 	</head>
 	<body class="loading">
@@ -299,6 +300,11 @@
 					</div>
 				</div>
 			</section>
+			<div id="bubble-title">
+				<h1>Let's Touch & Click</h1>
+			</div>
+			<canvas id="canvas"></canvas>
+			<div class="blur-overlay"></div>
 			<section class="content content--padded">
 				<h4 class="type-tiny">Style</h4>
 				<p class="content__text">His style is rooted in subtlety and restraint, capturing the delicate balance between light and shadow, presence and absence. He gravitates toward muted, natural tones that evoke a sense of quiet intimacy, favoring soft textures and a timeless, understated aesthetic. There’s a rawness in his work, yet it never feels harsh—rather, it reveals the fragility and beauty found in life’s simplest moments.</p>
@@ -378,8 +384,17 @@
 	    <!-- Add (Lenis) smooth scroll -->
 		<script src="../OnScrollLayoutFormations-main/js/lenis.min.js"></script>
 		<script src="../OnScrollLayoutFormations-main/js/smoothscroll.js"></script>
-
+		
+		<!-- Three.js CDN -->
+		<script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
+		<script src="https://unpkg.com/three@0.158.0/examples/js/postprocessing/EffectComposer.js"></script>
+		<script src="https://unpkg.com/three@0.158.0/examples/js/postprocessing/RenderPass.js"></script>
+		<script src="https://unpkg.com/three@0.158.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+		<script src="https://unpkg.com/three@0.158.0/examples/js/objects/Reflector.js"></script>
+		
 		<!-- Scripts for the effect -->
 		<script type="module" src="../OnScrollLayoutFormations-main/js/index.js"></script>
+		<link rel="stylesheet" type="text/css" href="bubble-styles.css"/>
+		<script type="module" src="script-enhanced-standalone.js"></script>
   </body>
 </html>
